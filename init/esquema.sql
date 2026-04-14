@@ -12,10 +12,15 @@ CREATE TABLE IF NOT EXISTS solicitante (
 CREATE UNIQUE INDEX IF NOT EXISTS idx_solicitante_nombre 
 ON solicitante(nombre);
 
-CREATE TABLE IF NOT EXISTS asignado (
+CREATE TABLE IF NOT EXISTS colaborador (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     nombre TEXT NOT NULL
 );
+
+CREATE UNIQUE INDEX IF NOT EXISTS idx_colaborador_nombre 
+ON colaborador(nombre);
+
+-- =========================
 
 CREATE TABLE IF NOT EXISTS codigo_SAP (
     codigo TEXT PRIMARY KEY,
@@ -59,7 +64,7 @@ CREATE TABLE IF NOT EXISTS pendientes (
     identificacion_tabla_pendiente TEXT,
 
     FOREIGN KEY (solicitante_id) REFERENCES solicitante(id),
-    FOREIGN KEY (asignado_id) REFERENCES asignado(id)
+    FOREIGN KEY (asignado_id) REFERENCES colaborador(id)
 );
 
 -- =========================
