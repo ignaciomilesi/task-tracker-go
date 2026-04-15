@@ -8,7 +8,6 @@ CREATE TABLE IF NOT EXISTS solicitante (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     nombre TEXT NOT NULL
 );
-
 CREATE UNIQUE INDEX IF NOT EXISTS idx_solicitante_nombre 
 ON solicitante(nombre);
 
@@ -16,16 +15,17 @@ CREATE TABLE IF NOT EXISTS colaborador (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     nombre TEXT NOT NULL
 );
-
 CREATE UNIQUE INDEX IF NOT EXISTS idx_colaborador_nombre 
 ON colaborador(nombre);
 
--- =========================
 
 CREATE TABLE IF NOT EXISTS codigo_SAP (
     codigo TEXT PRIMARY KEY,
-    descripcion TEXT NOT NULL
+    descripcion TEXT 
 );
+
+
+-- =========================
 
 CREATE TABLE IF NOT EXISTS codigo_ID (
     codigo TEXT PRIMARY KEY,

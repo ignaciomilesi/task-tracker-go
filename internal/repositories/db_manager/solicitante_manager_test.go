@@ -21,27 +21,41 @@ func randomString(n int) string {
 
 func TestCrear(t *testing.T) {
 
-	nombreTest := randomString(8)
+	nombreTest := randomString(6)
 
-	db := NewGestotorDb("../../../database/app_test.db")
-	defer db.Close()
-	solicitanteManager := NewsolicitanteRepository(db)
-
-	id1, err := solicitanteManager.Crear(nombreTest)
-
-	if err != nil {
-		t.Errorf("Error no esperado.\nSe esperaba: \n --- nil \nse obtuvo: \n --- %v", err)
+	tests := []struct {
+		name          string
+		Usuario       string
+		errorEsperado error
+	}{
+		{
+			name:          "Todo Ok",
+			Usuario:       nombreTest,
+			errorEsperado: nil,
+		},
+		{
+			name:          "Solicitante duplicado",
+			Usuario:       nombreTest,
+			errorEsperado: appErrors.SolicitanteDuplicado,
+		},
 	}
 
-	//repito el pedido para revisar si devuelve el mismo id
-	id2, err := solicitanteManager.Crear(nombreTest)
+	for _, test := range tests {
 
-	if err != nil {
-		t.Errorf("Error no esperado.\nSe esperaba: \n --- nil \nse obtuvo: \n --- %v", err)
-	}
+		t.Run(test.name, func(t *testing.T) {
 
-	if id1 != id2 {
-		t.Errorf("Error no esperado.\nSe esperaba: \n --- id1 = id2 \nse obtuvo: \n --- id1 = %d, id2=%d", id1, id2)
+			db := NewGestotorDb("../../../database/app_test.db")
+			defer db.Close()
+			solicitanteManager := NewsolicitanteRepository(db)
+
+			_, err := solicitanteManager.Crear(test.Usuario)
+
+			if !errors.Is(err, test.errorEsperado) {
+
+				t.Errorf("Error no esperado.\nSe esperaba: \n --- %v \nse obtuvo: \n --- %v",
+					test.errorEsperado, err)
+			}
+		})
 	}
 
 }

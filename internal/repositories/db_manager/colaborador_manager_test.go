@@ -9,27 +9,41 @@ import (
 
 func TestCrearColaborador(t *testing.T) {
 
-	nombreTest := randomString(8)
+	nombreTest := randomString(6)
 
-	db := NewGestotorDb("../../../database/app_test.db")
-	defer db.Close()
-	colaboradorManager := NewColaboradorRepository(db)
-
-	id1, err := colaboradorManager.Crear(nombreTest)
-
-	if err != nil {
-		t.Errorf("Error no esperado.\nSe esperaba: \n --- nil \nse obtuvo: \n --- %v", err)
+	tests := []struct {
+		name          string
+		Usuario       string
+		errorEsperado error
+	}{
+		{
+			name:          "Todo Ok",
+			Usuario:       nombreTest,
+			errorEsperado: nil,
+		},
+		{
+			name:          "Colaborador duplicado",
+			Usuario:       nombreTest,
+			errorEsperado: appErrors.ColaboradorDuplicado,
+		},
 	}
 
-	// repito el pedido para revisar si devuelve el mismo id
-	id2, err := colaboradorManager.Crear(nombreTest)
+	for _, test := range tests {
 
-	if err != nil {
-		t.Errorf("Error no esperado.\nSe esperaba: \n --- nil \nse obtuvo: \n --- %v", err)
-	}
+		t.Run(test.name, func(t *testing.T) {
 
-	if id1 != id2 {
-		t.Errorf("Error no esperado.\nSe esperaba: \n --- id1 = id2 \nse obtuvo: \n --- id1 = %d, id2=%d", id1, id2)
+			db := NewGestotorDb("../../../database/app_test.db")
+			defer db.Close()
+			colaboradorManager := NewColaboradorRepository(db)
+
+			_, err := colaboradorManager.Crear(test.Usuario)
+
+			if !errors.Is(err, test.errorEsperado) {
+
+				t.Errorf("Error no esperado.\nSe esperaba: \n --- %v \nse obtuvo: \n --- %v",
+					test.errorEsperado, err)
+			}
+		})
 	}
 }
 

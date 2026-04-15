@@ -17,7 +17,7 @@ func main() {
 	defer db.Close()
 
 	// leer archivo SQL
-	queryBytes, err := os.ReadFile("./init/esquema.sql")
+	queryBytes, err := os.ReadFile("./database/esquema.sql")
 	if err != nil {
 		log.Fatal(err)
 	}

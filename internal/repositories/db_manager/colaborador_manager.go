@@ -2,11 +2,13 @@ package dbmanager
 
 import (
 	"database/sql"
+	"errors"
 	"fmt"
 
 	"task-tracker-go/internal/appErrors"
 	"task-tracker-go/internal/models"
 
+	"github.com/mattn/go-sqlite3"
 	_ "github.com/mattn/go-sqlite3"
 )
 
@@ -18,29 +20,26 @@ func NewColaboradorRepository(db *sql.DB) *colaboradorRepository {
 	return &colaboradorRepository{db: db}
 }
 
-// Crear nuevo colaborador, devuelve el id creado o, en caso que ya exista,
-// devuelve el id del colaborador existente
+// Crear nuevo colaborador, devuelve el id creado
 func (r *colaboradorRepository) Crear(nombre string) (int64, error) {
 	res, err := r.db.Exec(
-		"INSERT OR IGNORE INTO colaborador (nombre) VALUES (?)",
+		"INSERT INTO colaborador (nombre) VALUES (?)",
 		nombre,
 	)
 	if err != nil {
-		return 0, fmt.Errorf("Error inesperado, detalle: %v", err)
+		var sqliteErr sqlite3.Error
+		if errors.As(err, &sqliteErr) {
+			if sqliteErr.ExtendedCode == sqlite3.ErrConstraintUnique {
+				return 0, appErrors.ColaboradorDuplicado
+			}
+		}
+
+		return 0, fmt.Errorf("error inesperado: %w", err)
 	}
 
 	id, err := res.LastInsertId()
 	if err != nil {
 		return 0, fmt.Errorf("Error inesperado, detalle: %v", err)
-	}
-
-	// si no insertó (ya existía), buscamos el ID
-	if id == 0 {
-		existingID, err := r.ObtenerIDPorNombre(nombre)
-		if err != nil {
-			return 0, err
-		}
-		return int64(existingID), nil
 	}
 
 	return id, nil
