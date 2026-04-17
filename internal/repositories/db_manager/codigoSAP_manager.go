@@ -96,17 +96,14 @@ func (r *codigoSAPRepository) BuscarPorDescripcion(parametro string) ([]models.C
 }
 
 // Modificar descripción de un código SAP
-func (r *codigoSAPRepository) ModificarCodigoSAP(CodigoSapModificado *models.CodigoSAP) error {
+func (r *codigoSAPRepository) ModificarDescripcion(codigo string, nuevaDescripcion string) error {
 
-	if strings.TrimSpace(CodigoSapModificado.Codigo) == "" {
+	if strings.TrimSpace(codigo) == "" {
 		return appErrors.CodigoSAPVacio
 	}
 
 	result, err := r.db.Exec(
-		"UPDATE codigo_SAP SET descripcion = ? WHERE codigo = ?",
-		CodigoSapModificado.Descripcion,
-		CodigoSapModificado.Codigo,
-	)
+		"UPDATE codigo_SAP SET descripcion = ? WHERE codigo = ?", nuevaDescripcion, codigo)
 	if err != nil {
 		return fmt.Errorf("error inesperado: %v", err)
 	}

@@ -179,20 +179,17 @@ func TestBuscarPorDescripcionCodigoSAP(t *testing.T) {
 
 func TestModificarDescripcionCodigoSAP(t *testing.T) {
 
-	descripcionModificada := "description modificación de prueba"
-
 	tests := []struct {
-		name             string
-		codigoModificado *models.CodigoSAP
-		funcionCarga     func(*codigoSAPRepository, string)
-		errorEsperado    error
+		name                  string
+		codigo                string
+		descripcionModificada string
+		funcionCarga          func(*codigoSAPRepository, string)
+		errorEsperado         error
 	}{
 		{
-			name: "Todo Ok",
-			codigoModificado: &models.CodigoSAP{
-				Codigo:      randomString(5),
-				Descripcion: &descripcionModificada,
-			},
+			name:                  "Todo Ok",
+			codigo:                randomString(5),
+			descripcionModificada: "description modificación de prueba",
 			funcionCarga: func(cs *codigoSAPRepository, codigo string) {
 				descripcionInicial := "description inicial de prueba"
 				cs.Cargar(&models.CodigoSAP{
@@ -203,30 +200,28 @@ func TestModificarDescripcionCodigoSAP(t *testing.T) {
 			errorEsperado: nil,
 		},
 		{
-			name:             "Código en blanco",
-			codigoModificado: &models.CodigoSAP{},
-			errorEsperado:    appErrors.CodigoSAPVacio,
+			name:                  "Código en blanco",
+			codigo:                "",
+			descripcionModificada: "description modificación de prueba",
+			errorEsperado:         appErrors.CodigoSAPVacio,
 		},
 		{
-			name: "Código No encontrado",
-			codigoModificado: &models.CodigoSAP{
-				Codigo:      randomString(5),
-				Descripcion: &descripcionModificada,
-			},
-			errorEsperado: appErrors.CodigoSAPNoEncontrado,
+			name:                  "Código No encontrado",
+			codigo:                randomString(5),
+			descripcionModificada: "description modificación de prueba",
+			errorEsperado:         appErrors.CodigoSAPNoEncontrado,
 		},
 		{
-			name: "Description inicial nil",
-			codigoModificado: &models.CodigoSAP{
-				Codigo:      randomString(5),
-				Descripcion: &descripcionModificada,
-			},
+			name:   "Description inicial nil",
+			codigo: randomString(5),
 			funcionCarga: func(cs *codigoSAPRepository, codigo string) {
 				cs.Cargar(&models.CodigoSAP{
-					Codigo: codigo,
+					Codigo:      codigo,
+					Descripcion: nil,
 				})
 			},
-			errorEsperado: nil,
+			descripcionModificada: "description modificación de prueba-nil",
+			errorEsperado:         nil,
 		},
 	}
 
@@ -239,10 +234,10 @@ func TestModificarDescripcionCodigoSAP(t *testing.T) {
 			codigoSAP := NewCodigoSAPRepository(db)
 
 			if test.funcionCarga != nil {
-				test.funcionCarga(codigoSAP, test.codigoModificado.Codigo)
+				test.funcionCarga(codigoSAP, test.codigo)
 			}
 
-			err := codigoSAP.ModificarCodigoSAP(test.codigoModificado)
+			err := codigoSAP.ModificarDescripcion(test.codigo, test.descripcionModificada)
 
 			if !errors.Is(err, test.errorEsperado) {
 
