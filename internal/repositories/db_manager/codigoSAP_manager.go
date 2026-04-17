@@ -22,16 +22,16 @@ func NewCodigoSAPRepository(db *sql.DB) *codigoSAPRepository {
 }
 
 // Cargar nuevo código SAP
-func (r *codigoSAPRepository) Cargar(codigo string, descripcion *string) error {
+func (r *codigoSAPRepository) Cargar(NuevoCodigoSap *models.CodigoSAP) error {
 
-	if strings.TrimSpace(codigo) == "" {
+	if strings.TrimSpace(NuevoCodigoSap.Codigo) == "" {
 		return appErrors.CodigoSAPVacio
 	}
 
 	_, err := r.db.Exec(
 		"INSERT INTO codigo_SAP (codigo, descripcion) VALUES (?, ?)",
-		codigo,
-		descripcion,
+		NuevoCodigoSap.Codigo,
+		NuevoCodigoSap.Descripcion,
 	)
 	if err != nil {
 		var sqliteErr sqlite3.Error
@@ -96,14 +96,16 @@ func (r *codigoSAPRepository) BuscarPorDescripcion(parametro string) ([]models.C
 }
 
 // Modificar descripción de un código SAP
-func (r *codigoSAPRepository) ModificarDescripcion(codigo string, nuevaDescripcion string) error {
+func (r *codigoSAPRepository) ModificarCodigoSAP(CodigoSapModificado *models.CodigoSAP) error {
 
-	if strings.TrimSpace(codigo) == "" {
+	if strings.TrimSpace(CodigoSapModificado.Codigo) == "" {
 		return appErrors.CodigoSAPVacio
 	}
 
 	result, err := r.db.Exec(
-		"UPDATE codigo_SAP SET descripcion = ? WHERE codigo = ?", nuevaDescripcion, codigo,
+		"UPDATE codigo_SAP SET descripcion = ? WHERE codigo = ?",
+		CodigoSapModificado.Descripcion,
+		CodigoSapModificado.Codigo,
 	)
 	if err != nil {
 		return fmt.Errorf("error inesperado: %v", err)

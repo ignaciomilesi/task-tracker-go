@@ -21,10 +21,10 @@ func NewColaboradorRepository(db *sql.DB) *colaboradorRepository {
 }
 
 // Crear nuevo colaborador, devuelve el id creado
-func (r *colaboradorRepository) Crear(nombre string) (int64, error) {
+func (r *colaboradorRepository) Crear(NuevoColaborador *models.Colaborador) (int64, error) {
 	res, err := r.db.Exec(
 		"INSERT INTO colaborador (nombre) VALUES (?)",
-		nombre,
+		NuevoColaborador.Nombre,
 	)
 	if err != nil {
 		var sqliteErr sqlite3.Error

@@ -3,27 +3,34 @@ package dbmanager
 import (
 	"errors"
 	"task-tracker-go/internal/appErrors"
+	"task-tracker-go/internal/models"
 
 	"testing"
 )
 
 func TestCrearColaborador(t *testing.T) {
 
-	nombreTest := randomString(6)
-
 	tests := []struct {
 		name          string
-		Usuario       string
+		colaborador   *models.Colaborador
+		funcionCarga  func(*colaboradorRepository, *models.Colaborador)
 		errorEsperado error
 	}{
 		{
-			name:          "Todo Ok",
-			Usuario:       nombreTest,
+			name: "Todo Ok",
+			colaborador: &models.Colaborador{
+				Nombre: randomString(6),
+			},
 			errorEsperado: nil,
 		},
 		{
-			name:          "Colaborador duplicado",
-			Usuario:       nombreTest,
+			name: "Colaborador duplicado",
+			colaborador: &models.Colaborador{
+				Nombre: randomString(6),
+			},
+			funcionCarga: func(cr *colaboradorRepository, c *models.Colaborador) {
+				cr.Crear(c)
+			},
 			errorEsperado: appErrors.ColaboradorDuplicado,
 		},
 	}
@@ -36,7 +43,11 @@ func TestCrearColaborador(t *testing.T) {
 			defer db.Close()
 			colaboradorManager := NewColaboradorRepository(db)
 
-			_, err := colaboradorManager.Crear(test.Usuario)
+			if test.funcionCarga != nil {
+				test.funcionCarga(colaboradorManager, test.colaborador)
+			}
+
+			_, err := colaboradorManager.Crear(test.colaborador)
 
 			if !errors.Is(err, test.errorEsperado) {
 
@@ -51,11 +62,15 @@ func TestObtenerIDPorNombreColaborador(t *testing.T) {
 	tests := []struct {
 		name          string
 		Usuario       string
+		funcionCarga  func(*colaboradorRepository, *models.Colaborador)
 		errorEsperado error
 	}{
 		{
-			name:          "Todo Ok",
-			Usuario:       "ColaboradorTestExistente",
+			name:    "Todo Ok",
+			Usuario: randomString(8),
+			funcionCarga: func(sr *colaboradorRepository, s *models.Colaborador) {
+				sr.Crear(s)
+			},
 			errorEsperado: nil,
 		},
 		{
@@ -72,6 +87,12 @@ func TestObtenerIDPorNombreColaborador(t *testing.T) {
 			db := NewGestotorDb("../../../database/app_test.db")
 			defer db.Close()
 			colaboradorManager := NewColaboradorRepository(db)
+
+			if test.funcionCarga != nil {
+				test.funcionCarga(colaboradorManager, &models.Colaborador{
+					Nombre: test.Usuario,
+				})
+			}
 
 			_, err := colaboradorManager.ObtenerIDPorNombre(test.Usuario)
 
@@ -92,13 +113,22 @@ func TestBuscarColaborador(t *testing.T) {
 	colaboradorManager := NewColaboradorRepository(db)
 
 	// creamos 3 colaboradores para realizar la prueba
-	if _, err := colaboradorManager.Crear("ColaboradorFiltro1"); err != nil {
+	if _, err := colaboradorManager.Crear(
+		&models.Colaborador{
+			Nombre: "SolicitanteFiltro1",
+		}); err != nil {
 		t.Errorf("Error al crear colaborador. Detalle: %v", err)
 	}
-	if _, err := colaboradorManager.Crear("ColaboradorFiltro2"); err != nil {
+	if _, err := colaboradorManager.Crear(
+		&models.Colaborador{
+			Nombre: "ColaboradorFiltro2",
+		}); err != nil {
 		t.Errorf("Error al crear colaborador. Detalle: %v", err)
 	}
-	if _, err := colaboradorManager.Crear("ColaboradorFiltro3"); err != nil {
+	if _, err := colaboradorManager.Crear(
+		&models.Colaborador{
+			Nombre: "ColaboradorFiltro3",
+		}); err != nil {
 		t.Errorf("Error al crear colaborador. Detalle: %v", err)
 	}
 

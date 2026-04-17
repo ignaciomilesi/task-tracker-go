@@ -3,6 +3,7 @@ package dbmanager
 import (
 	"errors"
 	"task-tracker-go/internal/appErrors"
+	"task-tracker-go/internal/models"
 
 	"testing"
 )
@@ -10,36 +11,46 @@ import (
 func TestCargarCodigoSAP(t *testing.T) {
 
 	descripPrueba := "description de prueba"
-	codigoTest := randomString(5)
 
 	tests := []struct {
 		name          string
-		codigo        string
-		descripcion   *string
+		codigo        models.CodigoSAP
+		funcionCarga  func(*codigoSAPRepository, *models.CodigoSAP)
 		errorEsperado error
 	}{
 		{
-			name:          "Todo Ok",
-			codigo:        codigoTest,
-			descripcion:   &descripPrueba,
+			name: "Todo Ok",
+			codigo: models.CodigoSAP{
+				Codigo:      randomString(5),
+				Descripcion: &descripPrueba,
+			},
 			errorEsperado: nil,
 		},
 		{
-			name:          "Código en blanco",
-			codigo:        "",
-			descripcion:   &descripPrueba,
+			name: "Código en blanco",
+			codigo: models.CodigoSAP{
+				Codigo:      "",
+				Descripcion: &descripPrueba,
+			},
 			errorEsperado: appErrors.CodigoSAPVacio,
 		},
 		{
-			name:          "Código duplicado",
-			codigo:        codigoTest,
-			descripcion:   &descripPrueba,
+			name: "Código duplicado",
+			codigo: models.CodigoSAP{
+				Codigo:      randomString(5),
+				Descripcion: &descripPrueba,
+			},
+			funcionCarga: func(cs *codigoSAPRepository, s *models.CodigoSAP) {
+				cs.Cargar(s)
+			},
 			errorEsperado: appErrors.CodigoSAPDuplicado,
 		},
 		{
-			name:          "Description en blanco",
-			codigo:        randomString(5),
-			descripcion:   nil,
+			name: "Description nil",
+			codigo: models.CodigoSAP{
+				Codigo:      randomString(5),
+				Descripcion: nil,
+			},
 			errorEsperado: nil,
 		},
 	}
@@ -52,7 +63,11 @@ func TestCargarCodigoSAP(t *testing.T) {
 			defer db.Close()
 			codigoSAP := NewCodigoSAPRepository(db)
 
-			err := codigoSAP.Cargar(test.codigo, test.descripcion)
+			if test.funcionCarga != nil {
+				test.funcionCarga(codigoSAP, &test.codigo)
+			}
+
+			err := codigoSAP.Cargar(&test.codigo)
 
 			if !errors.Is(err, test.errorEsperado) {
 
@@ -64,15 +79,19 @@ func TestCargarCodigoSAP(t *testing.T) {
 }
 
 func TestObtenerDetalleCodigoSAP(t *testing.T) {
-	codigoTest := randomString(5)
+
 	tests := []struct {
 		name          string
 		codigo        string
+		funcionCarga  func(*codigoSAPRepository, *models.CodigoSAP)
 		errorEsperado error
 	}{
 		{
-			name:          "Todo Ok",
-			codigo:        codigoTest,
+			name:   "Todo Ok",
+			codigo: randomString(5),
+			funcionCarga: func(cs *codigoSAPRepository, s *models.CodigoSAP) {
+				cs.Cargar(s)
+			},
 			errorEsperado: nil,
 		},
 		{
@@ -90,7 +109,11 @@ func TestObtenerDetalleCodigoSAP(t *testing.T) {
 			defer db.Close()
 			codigoSAPManager := NewCodigoSAPRepository(db)
 
-			codigoSAPManager.Cargar(codigoTest, nil)
+			if test.funcionCarga != nil {
+				test.funcionCarga(codigoSAPManager, &models.CodigoSAP{
+					Codigo: test.codigo,
+				})
+			}
 			_, err := codigoSAPManager.ObtenerDetalle(test.codigo)
 
 			if !errors.Is(err, test.errorEsperado) {
@@ -110,17 +133,27 @@ func TestBuscarPorDescripcionCodigoSAP(t *testing.T) {
 	codigoSAPManager := NewCodigoSAPRepository(db)
 
 	// creamos 3 códigos para realizar la prueba
-	descipcionTest := "DescripcionFiltro1"
-	if err := codigoSAPManager.Cargar("codigo1", &descipcionTest); err != nil {
-		t.Errorf("Error al crear colaborador. Detalle: %v", err)
+
+	descripcionTest := "filtro"
+	if err := codigoSAPManager.Cargar(&models.CodigoSAP{
+		Codigo:      randomString(4),
+		Descripcion: &descripcionTest,
+	}); err != nil {
+		t.Errorf("Error al crear codigoSAP. Detalle: %v", err)
 	}
-	descipcionTest = "DescripcionFiltro2"
-	if err := codigoSAPManager.Cargar("codigo2", &descipcionTest); err != nil {
-		t.Errorf("Error al crear colaborador. Detalle: %v", err)
+
+	if err := codigoSAPManager.Cargar(&models.CodigoSAP{
+		Codigo:      randomString(4),
+		Descripcion: &descripcionTest,
+	}); err != nil {
+		t.Errorf("Error al crear codigoSAP. Detalle: %v", err)
 	}
-	descipcionTest = "DescripcionFiltro3"
-	if err := codigoSAPManager.Cargar("codigo3", &descipcionTest); err != nil {
-		t.Errorf("Error al crear colaborador. Detalle: %v", err)
+
+	if err := codigoSAPManager.Cargar(&models.CodigoSAP{
+		Codigo:      randomString(4),
+		Descripcion: &descripcionTest,
+	}); err != nil {
+		t.Errorf("Error al crear codigoSAP. Detalle: %v", err)
 	}
 
 	// Busco filtrando
@@ -146,43 +179,54 @@ func TestBuscarPorDescripcionCodigoSAP(t *testing.T) {
 
 func TestModificarDescripcionCodigoSAP(t *testing.T) {
 
+	descripcionModificada := "description modificación de prueba"
+
 	tests := []struct {
-		name                  string
-		codigo                string
-		descripcionModificada string
-		funcionCarga          func(*codigoSAPRepository, string)
-		errorEsperado         error
+		name             string
+		codigoModificado *models.CodigoSAP
+		funcionCarga     func(*codigoSAPRepository, string)
+		errorEsperado    error
 	}{
 		{
-			name:                  "Todo Ok",
-			codigo:                randomString(5),
-			descripcionModificada: "description modificación de prueba",
+			name: "Todo Ok",
+			codigoModificado: &models.CodigoSAP{
+				Codigo:      randomString(5),
+				Descripcion: &descripcionModificada,
+			},
 			funcionCarga: func(cs *codigoSAPRepository, codigo string) {
 				descripcionInicial := "description inicial de prueba"
-				cs.Cargar(codigo, &descripcionInicial)
+				cs.Cargar(&models.CodigoSAP{
+					Codigo:      codigo,
+					Descripcion: &descripcionInicial,
+				})
 			},
 			errorEsperado: nil,
 		},
 		{
-			name:                  "Código en blanco",
-			codigo:                "",
-			descripcionModificada: "description modificación de prueba",
-			errorEsperado:         appErrors.CodigoSAPVacio,
+			name:             "Código en blanco",
+			codigoModificado: &models.CodigoSAP{},
+			errorEsperado:    appErrors.CodigoSAPVacio,
 		},
 		{
-			name:                  "Código No encontrado",
-			codigo:                randomString(5),
-			descripcionModificada: "description modificación de prueba",
-			errorEsperado:         appErrors.CodigoSAPNoEncontrado,
-		},
-		{
-			name:   "Description inicial nil",
-			codigo: randomString(5),
-			funcionCarga: func(cs *codigoSAPRepository, codigo string) {
-				cs.Cargar(codigo, nil)
+			name: "Código No encontrado",
+			codigoModificado: &models.CodigoSAP{
+				Codigo:      randomString(5),
+				Descripcion: &descripcionModificada,
 			},
-			descripcionModificada: "description modificación de prueba-nil",
-			errorEsperado:         nil,
+			errorEsperado: appErrors.CodigoSAPNoEncontrado,
+		},
+		{
+			name: "Description inicial nil",
+			codigoModificado: &models.CodigoSAP{
+				Codigo:      randomString(5),
+				Descripcion: &descripcionModificada,
+			},
+			funcionCarga: func(cs *codigoSAPRepository, codigo string) {
+				cs.Cargar(&models.CodigoSAP{
+					Codigo: codigo,
+				})
+			},
+			errorEsperado: nil,
 		},
 	}
 
@@ -195,10 +239,10 @@ func TestModificarDescripcionCodigoSAP(t *testing.T) {
 			codigoSAP := NewCodigoSAPRepository(db)
 
 			if test.funcionCarga != nil {
-				test.funcionCarga(codigoSAP, test.codigo)
+				test.funcionCarga(codigoSAP, test.codigoModificado.Codigo)
 			}
 
-			err := codigoSAP.ModificarDescripcion(test.codigo, test.descripcionModificada)
+			err := codigoSAP.ModificarCodigoSAP(test.codigoModificado)
 
 			if !errors.Is(err, test.errorEsperado) {
 
