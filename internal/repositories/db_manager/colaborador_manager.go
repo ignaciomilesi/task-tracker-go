@@ -63,8 +63,11 @@ func (r *colaboradorRepository) ObtenerIDPorNombre(nombre string) (int, error) {
 	return id, nil
 }
 
-// Busca en la lista. Si el parámetro es vacío, trae la lista completa
+// Busca en la lista.
 func (r *colaboradorRepository) Buscar(parametro string) ([]models.Colaborador, error) {
+	if parametro == "" {
+		return nil, appErrors.ParametroDeBusquedaVacio
+	}
 	rows, err := r.db.Query(
 		"SELECT id, nombre FROM colaborador WHERE nombre LIKE ?",
 		"%"+parametro+"%",
@@ -85,6 +88,40 @@ func (r *colaboradorRepository) Buscar(parametro string) ([]models.Colaborador, 
 		}
 
 		lista = append(lista, c)
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("Error inesperado, detalle: %v", err)
+	}
+
+	return lista, nil
+}
+
+func (r *colaboradorRepository) Listar(limit, offset int) ([]models.Colaborador, error) {
+
+	rows, err := r.db.Query(
+		`SELECT id, nombre FROM colaborador ORDER BY id
+        LIMIT ? OFFSET ?`, limit, offset)
+	if err != nil {
+		return nil, fmt.Errorf("Error inesperado, detalle: %v", err)
+	}
+	defer rows.Close()
+
+	var lista []models.Colaborador
+
+	for rows.Next() {
+		var c models.Colaborador
+
+		err := rows.Scan(&c.ID, &c.Nombre)
+		if err != nil {
+			return nil, fmt.Errorf("Error inesperado, detalle: %v", err)
+		}
+
+		lista = append(lista, c)
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("Error inesperado, detalle: %v", err)
 	}
 
 	return lista, nil

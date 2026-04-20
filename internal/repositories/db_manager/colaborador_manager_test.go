@@ -152,3 +152,64 @@ func TestBuscarColaborador(t *testing.T) {
 		t.Errorf("Error en la busqueda, se esperaban más resultados sin filtro pero se obtuvo %d", len(listaSinFiltrar))
 	}
 }
+
+func TestListarColaborador(t *testing.T) {
+
+	tests := []struct {
+		name          string
+		limit         int
+		offset        int
+		funcionCarga  func(*colaboradorRepository)
+		largoEsperado int
+		errorEsperado error
+	}{
+		{
+			name:   "Lista con datos",
+			limit:  10,
+			offset: 0,
+			funcionCarga: func(sr *colaboradorRepository) {
+				sr.Crear(&models.Colaborador{Nombre: randomString(6)})
+				sr.Crear(&models.Colaborador{Nombre: randomString(6)})
+			},
+			errorEsperado: nil,
+		},
+		{
+			name:   "Respeta limit",
+			limit:  1,
+			offset: 0,
+			funcionCarga: func(sr *colaboradorRepository) {
+				sr.Crear(&models.Colaborador{Nombre: randomString(6)})
+				sr.Crear(&models.Colaborador{Nombre: randomString(6)})
+			},
+			largoEsperado: 1,
+			errorEsperado: nil,
+		},
+	}
+
+	for _, test := range tests {
+
+		t.Run(test.name, func(t *testing.T) {
+
+			db := NewGestotorDb("../../../database/app_test.db")
+			defer db.Close()
+
+			colaboradorManager := NewColaboradorRepository(db)
+
+			if test.funcionCarga != nil {
+				test.funcionCarga(colaboradorManager)
+			}
+
+			lista, err := colaboradorManager.Listar(test.limit, test.offset)
+
+			if !errors.Is(err, test.errorEsperado) {
+				t.Errorf("Error no esperado.\nSe esperaba:\n --- %v\nSe obtuvo:\n --- %v",
+					test.errorEsperado, err)
+			}
+
+			if test.largoEsperado != 0 && len(lista) != test.largoEsperado {
+				t.Errorf("Cantidad incorrecta.\nSe esperaba:\n --- %v\nSe obtuvo:\n --- %v",
+					test.largoEsperado, len(lista))
+			}
+		})
+	}
+}

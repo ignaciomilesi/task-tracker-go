@@ -67,9 +67,12 @@ func (r *codigoSAPRepository) ObtenerDetalle(codigo string) (*models.CodigoSAP, 
 	return &c, nil
 }
 
-// Buscar por descripción (LIKE). Si parámetro vacío, trae todo
+// Buscar por descripción
 func (r *codigoSAPRepository) BuscarPorDescripcion(parametro string) ([]models.CodigoSAP, error) {
 
+	if parametro == "" {
+		return nil, appErrors.ParametroDeBusquedaVacio
+	}
 	rows, err := r.db.Query(
 		"SELECT codigo, descripcion FROM codigo_SAP WHERE descripcion LIKE ?",
 		"%"+parametro+"%",
@@ -92,6 +95,10 @@ func (r *codigoSAPRepository) BuscarPorDescripcion(parametro string) ([]models.C
 		lista = append(lista, c)
 	}
 
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("Error inesperado, detalle: %v", err)
+	}
+
 	return lista, nil
 }
 
@@ -110,7 +117,7 @@ func (r *codigoSAPRepository) ModificarDescripcion(codigo string, nuevaDescripci
 
 	rowsAffected, err := result.RowsAffected()
 	if err != nil {
-		return fmt.Errorf("error obteniendo filas afectadas: %v", err)
+		return fmt.Errorf("error inesperado: %v", err)
 	}
 
 	if rowsAffected == 0 {
@@ -118,4 +125,34 @@ func (r *codigoSAPRepository) ModificarDescripcion(codigo string, nuevaDescripci
 	}
 
 	return nil
+}
+
+func (r *codigoSAPRepository) Listar(limit, offset int) ([]models.CodigoSAP, error) {
+
+	rows, err := r.db.Query(
+		`SELECT codigo, descripcion FROM codigo_SAP ORDER BY codigo
+        LIMIT ? OFFSET ?`, limit, offset)
+	if err != nil {
+		return nil, fmt.Errorf("Error inesperado, detalle: %v", err)
+	}
+	defer rows.Close()
+
+	var lista []models.CodigoSAP
+
+	for rows.Next() {
+		var c models.CodigoSAP
+
+		err := rows.Scan(&c.Codigo, &c.Descripcion)
+		if err != nil {
+			return nil, fmt.Errorf("Error inesperado, detalle: %v", err)
+		}
+
+		lista = append(lista, c)
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("Error inesperado, detalle: %v", err)
+	}
+
+	return lista, nil
 }

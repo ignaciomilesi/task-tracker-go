@@ -165,3 +165,64 @@ func TestBuscar(t *testing.T) {
 	}
 
 }
+
+func TestListar(t *testing.T) {
+
+	tests := []struct {
+		name          string
+		limit         int
+		offset        int
+		funcionCarga  func(*solicitanteRepository)
+		largoEsperado int
+		errorEsperado error
+	}{
+		{
+			name:   "Lista con datos",
+			limit:  10,
+			offset: 0,
+			funcionCarga: func(sr *solicitanteRepository) {
+				sr.Crear(&models.Solicitante{Nombre: randomString(6)})
+				sr.Crear(&models.Solicitante{Nombre: randomString(6)})
+			},
+			errorEsperado: nil,
+		},
+		{
+			name:   "Respeta limit",
+			limit:  1,
+			offset: 0,
+			funcionCarga: func(sr *solicitanteRepository) {
+				sr.Crear(&models.Solicitante{Nombre: randomString(6)})
+				sr.Crear(&models.Solicitante{Nombre: randomString(6)})
+			},
+			largoEsperado: 1,
+			errorEsperado: nil,
+		},
+	}
+
+	for _, test := range tests {
+
+		t.Run(test.name, func(t *testing.T) {
+
+			db := NewGestotorDb("../../../database/app_test.db")
+			defer db.Close()
+
+			solicitanteManager := NewsolicitanteRepository(db)
+
+			if test.funcionCarga != nil {
+				test.funcionCarga(solicitanteManager)
+			}
+
+			lista, err := solicitanteManager.Listar(test.limit, test.offset)
+
+			if !errors.Is(err, test.errorEsperado) {
+				t.Errorf("Error no esperado.\nSe esperaba:\n --- %v\nSe obtuvo:\n --- %v",
+					test.errorEsperado, err)
+			}
+
+			if test.largoEsperado != 0 && len(lista) != test.largoEsperado {
+				t.Errorf("Cantidad incorrecta.\nSe esperaba:\n --- %v\nSe obtuvo:\n --- %v",
+					test.largoEsperado, len(lista))
+			}
+		})
+	}
+}
