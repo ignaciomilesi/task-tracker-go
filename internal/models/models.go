@@ -20,7 +20,7 @@ type CodigoSAP struct {
 type CodigoID struct {
 	Codigo             string     `db:"codigo"`
 	Descripcion        *string    `db:"descripcion"`
-	estado             string     `db:"estado"`
-	fechaPedido        time.Time  `db:"fecha_pedido"`
-	fechaActualizacion *time.Time `db:"fecha_actualizacion"`
+	Estado             string     `db:"estado"`
+	FechaPedido        time.Time  `db:"fecha_pedido"`
+	FechaActualizacion *time.Time `db:"fecha_actualizacion"`
 }
