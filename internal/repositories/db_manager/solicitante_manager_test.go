@@ -2,23 +2,11 @@ package dbmanager
 
 import (
 	"errors"
-	"math/rand"
 	"task-tracker-go/internal/appErrors"
 	"task-tracker-go/internal/models"
 
 	"testing"
 )
-
-func randomString(n int) string {
-
-	const letras = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
-
-	b := make([]byte, n)
-	for i := range b {
-		b[i] = letras[rand.Intn(len(letras))]
-	}
-	return string(b)
-}
 
 func TestCrear(t *testing.T) {
 
@@ -51,8 +39,9 @@ func TestCrear(t *testing.T) {
 
 		t.Run(test.name, func(t *testing.T) {
 
-			db := NewGestotorDb("../../../database/app_test.db")
+			db := generarGestorDbLimpio("solicitante")
 			defer db.Close()
+
 			solicitanteManager := NewsolicitanteRepository(db)
 
 			if test.funcionCarga != nil {
@@ -96,8 +85,9 @@ func TestObtenerIDPorNombre(t *testing.T) {
 
 		t.Run(test.name, func(t *testing.T) {
 
-			db := NewGestotorDb("../../../database/app_test.db")
+			db := generarGestorDbLimpio("solicitante")
 			defer db.Close()
+
 			solicitanteManager := NewsolicitanteRepository(db)
 
 			if test.funcionCarga != nil {
@@ -117,51 +107,68 @@ func TestObtenerIDPorNombre(t *testing.T) {
 	}
 }
 
-// probar la búsqueda con filtro y sin filtro (parámetro en blanco, trae lista completa)
+// probar la búsqueda con filtro
 func TestBuscar(t *testing.T) {
 
-	db := NewGestotorDb("../../../database/app_test.db")
-	defer db.Close()
-	solicitanteManager := NewsolicitanteRepository(db)
-
-	// creamos 3 solicitantes para realizar la prueba
-	if _, err := solicitanteManager.Crear(
-		&models.Solicitante{
-			Nombre: "SolicitanteFiltro1",
-		}); err != nil {
-		t.Errorf("Error al crear solicitante. Detalle: %v", err)
-	}
-	if _, err := solicitanteManager.Crear(
-		&models.Solicitante{
-			Nombre: "SolicitanteFiltro2",
-		}); err != nil {
-		t.Errorf("Error al crear solicitante. Detalle: %v", err)
-	}
-	if _, err := solicitanteManager.Crear(
-		&models.Solicitante{
-			Nombre: "SolicitanteFiltro3",
-		}); err != nil {
-		t.Errorf("Error al crear solicitante. Detalle: %v", err)
-	}
-
-	// Busco filtrando
-	listaFiltrada, err := solicitanteManager.Buscar("Filtro")
-	if err != nil {
-		t.Errorf("Error no esperado.\nSe esperaba: \n --- nil \nse obtuvo: \n --- %v", err)
-	}
-
-	if len(listaFiltrada) != 3 {
-		t.Errorf("Error en la busqueda, se esperaban 3 resultados pero se obtuvo %d. Detalle: \n %v", len(listaFiltrada), listaFiltrada)
-	}
-
-	// Busco toda la lista
-	listaSinFiltrar, err := solicitanteManager.Buscar("")
-	if err != nil {
-		t.Errorf("Error no esperado.\nSe esperaba: \n --- nil \nse obtuvo: \n --- %v", err)
+	tests := []struct {
+		name          string
+		filtro        string
+		funcionCarga  func(*solicitanteRepository)
+		largoEsperado int
+		errorEsperado error
+	}{
+		{
+			name:          "Sin resultados",
+			filtro:        "inexistente",
+			largoEsperado: 0,
+			errorEsperado: nil,
+		},
+		{
+			name:   "Con resultados",
+			filtro: "filtro",
+			funcionCarga: func(r *solicitanteRepository) {
+				if _, err := r.Crear(
+					&models.Solicitante{
+						Nombre: "SolicitanteFiltro1",
+					}); err != nil {
+					t.Errorf("Error al crear solicitante. Detalle: %v", err)
+				}
+				if _, err := r.Crear(
+					&models.Solicitante{
+						Nombre: "SolicitanteFiltro2",
+					}); err != nil {
+					t.Errorf("Error al crear solicitante. Detalle: %v", err)
+				}
+			},
+			largoEsperado: 2,
+			errorEsperado: nil,
+		},
 	}
 
-	if len(listaFiltrada) >= len(listaSinFiltrar) {
-		t.Errorf("Error en la busqueda, se esperaban 3 resultados pero se obtuvo %d", len(listaSinFiltrar))
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+
+			db := generarGestorDbLimpio("solicitante")
+			defer db.Close()
+
+			repo := NewsolicitanteRepository(db)
+
+			if test.funcionCarga != nil {
+				test.funcionCarga(repo)
+			}
+
+			lista, err := repo.Buscar(test.filtro)
+
+			if !errors.Is(err, test.errorEsperado) {
+				t.Errorf("Error inesperado.\nEsperado: %v\nObtenido: %v",
+					test.errorEsperado, err)
+			}
+
+			if len(lista) != test.largoEsperado {
+				t.Errorf("Cantidad incorrecta.\nEsperado: %d\nObtenido: %d",
+					test.largoEsperado, len(lista))
+			}
+		})
 	}
 
 }
@@ -203,7 +210,7 @@ func TestListar(t *testing.T) {
 
 		t.Run(test.name, func(t *testing.T) {
 
-			db := NewGestotorDb("../../../database/app_test.db")
+			db := generarGestorDbLimpio("solicitante")
 			defer db.Close()
 
 			solicitanteManager := NewsolicitanteRepository(db)

@@ -3,7 +3,7 @@ package appErrors
 import "errors"
 
 var (
-	ParametroDeBusquedaVacio = errors.New("El aprametro de bsuquedad no puede ser vacio")
+	ParametroDeBusquedaVacio = errors.New("El parámetro de brusquedad no puede ser vacío")
 
 	SolicitanteNoEncontrado = errors.New("Solicitante no fue encontrado")
 	SolicitanteDuplicado    = errors.New("El Solicitante ya existe en la base de datos")

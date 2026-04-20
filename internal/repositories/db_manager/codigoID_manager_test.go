@@ -49,7 +49,7 @@ func TestCodigoIDCargar(t *testing.T) {
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
 
-			db := NewGestotorDb("../../../database/app_test.db")
+			db := generarGestorDbLimpio("codigo_ID")
 			defer db.Close()
 
 			repo := NewCodigoIDRepository(db)
@@ -103,7 +103,7 @@ func TestCodigoIDObtenerDetalle(t *testing.T) {
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
 
-			db := NewGestotorDb("../../../database/app_test.db")
+			db := generarGestorDbLimpio("codigo_ID")
 			defer db.Close()
 
 			repo := NewCodigoIDRepository(db)
@@ -164,7 +164,7 @@ func TestCodigoIDFiltrarPorEstado(t *testing.T) {
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
 
-			db := NewGestotorDb("../../../database/app_test.db")
+			db := generarGestorDbLimpio("codigo_ID")
 			defer db.Close()
 
 			repo := NewCodigoIDRepository(db)
@@ -223,7 +223,7 @@ func TestCodigoIDActualizarEstado(t *testing.T) {
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
 
-			db := NewGestotorDb("../../../database/app_test.db")
+			db := generarGestorDbLimpio("codigo_ID")
 			defer db.Close()
 
 			repo := NewCodigoIDRepository(db)
@@ -272,7 +272,7 @@ func TestCodigoIDListar(t *testing.T) {
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
 
-			db := NewGestotorDb("../../../database/app_test.db")
+			db := generarGestorDbLimpio("codigo_ID")
 			defer db.Close()
 
 			repo := NewCodigoIDRepository(db)

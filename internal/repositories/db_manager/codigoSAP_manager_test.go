@@ -59,8 +59,9 @@ func TestCargarCodigoSAP(t *testing.T) {
 
 		t.Run(test.name, func(t *testing.T) {
 
-			db := NewGestotorDb("../../../database/app_test.db")
+			db := generarGestorDbLimpio("codigo_SAP")
 			defer db.Close()
+
 			codigoSAP := NewCodigoSAPRepository(db)
 
 			if test.funcionCarga != nil {
@@ -105,8 +106,9 @@ func TestObtenerDetalleCodigoSAP(t *testing.T) {
 
 		t.Run(test.name, func(t *testing.T) {
 
-			db := NewGestotorDb("../../../database/app_test.db")
+			db := generarGestorDbLimpio("codigo_SAP")
 			defer db.Close()
+
 			codigoSAPManager := NewCodigoSAPRepository(db)
 
 			if test.funcionCarga != nil {
@@ -128,53 +130,70 @@ func TestObtenerDetalleCodigoSAP(t *testing.T) {
 // probar la búsqueda con filtro y sin filtro (parámetro en blanco, trae lista completa)
 func TestBuscarPorDescripcionCodigoSAP(t *testing.T) {
 
-	db := NewGestotorDb("../../../database/app_test.db")
-	defer db.Close()
-	codigoSAPManager := NewCodigoSAPRepository(db)
-
-	// creamos 3 códigos para realizar la prueba
-
-	descripcionTest := "filtro"
-	if err := codigoSAPManager.Cargar(&models.CodigoSAP{
-		Codigo:      randomString(4),
-		Descripcion: &descripcionTest,
-	}); err != nil {
-		t.Errorf("Error al crear codigoSAP. Detalle: %v", err)
+	tests := []struct {
+		name          string
+		filtro        string
+		funcionCarga  func(*codigoSAPRepository)
+		largoEsperado int
+		errorEsperado error
+	}{
+		{
+			name:          "Sin resultados",
+			filtro:        "inexistente",
+			largoEsperado: 0,
+			errorEsperado: nil,
+		},
+		{
+			name:   "Con resultados",
+			filtro: "filtro",
+			funcionCarga: func(r *codigoSAPRepository) {
+				descripcionTest := "filtro"
+				if err := r.Cargar(
+					&models.CodigoSAP{
+						Codigo:      randomString(4),
+						Descripcion: &descripcionTest,
+					}); err != nil {
+					t.Errorf("Error al crear colaborador. Detalle: %v", err)
+				}
+				if err := r.Cargar(
+					&models.CodigoSAP{
+						Codigo:      randomString(4),
+						Descripcion: &descripcionTest,
+					}); err != nil {
+					t.Errorf("Error al crear colaborador. Detalle: %v", err)
+				}
+			},
+			largoEsperado: 2,
+			errorEsperado: nil,
+		},
 	}
 
-	if err := codigoSAPManager.Cargar(&models.CodigoSAP{
-		Codigo:      randomString(4),
-		Descripcion: &descripcionTest,
-	}); err != nil {
-		t.Errorf("Error al crear codigoSAP. Detalle: %v", err)
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+
+			db := generarGestorDbLimpio("codigo_SAP")
+			defer db.Close()
+
+			repo := NewCodigoSAPRepository(db)
+
+			if test.funcionCarga != nil {
+				test.funcionCarga(repo)
+			}
+
+			lista, err := repo.BuscarPorDescripcion(test.filtro)
+
+			if !errors.Is(err, test.errorEsperado) {
+				t.Errorf("Error inesperado.\nEsperado: %v\nObtenido: %v",
+					test.errorEsperado, err)
+			}
+
+			if len(lista) != test.largoEsperado {
+				t.Errorf("Cantidad incorrecta.\nEsperado: %d\nObtenido: %d",
+					test.largoEsperado, len(lista))
+			}
+		})
 	}
 
-	if err := codigoSAPManager.Cargar(&models.CodigoSAP{
-		Codigo:      randomString(4),
-		Descripcion: &descripcionTest,
-	}); err != nil {
-		t.Errorf("Error al crear codigoSAP. Detalle: %v", err)
-	}
-
-	// Busco filtrando
-	listaFiltrada, err := codigoSAPManager.BuscarPorDescripcion("Filtro")
-	if err != nil {
-		t.Errorf("Error no esperado.\nSe esperaba: \n --- nil \nse obtuvo: \n --- %v", err)
-	}
-
-	if len(listaFiltrada) != 3 {
-		t.Errorf("Error en la búsqueda, se esperaban 3 resultados pero se obtuvo %d. Detalle: \n %v", len(listaFiltrada), listaFiltrada)
-	}
-
-	// Busco toda la lista
-	listaSinFiltrar, err := codigoSAPManager.BuscarPorDescripcion("")
-	if err != nil {
-		t.Errorf("Error no esperado.\nSe esperaba: \n --- nil \nse obtuvo: \n --- %v", err)
-	}
-
-	if len(listaFiltrada) >= len(listaSinFiltrar) {
-		t.Errorf("Error en la búsqueda, se esperaban más resultados sin filtro pero se obtuvo %d", len(listaSinFiltrar))
-	}
 }
 
 func TestModificarDescripcionCodigoSAP(t *testing.T) {
@@ -229,8 +248,9 @@ func TestModificarDescripcionCodigoSAP(t *testing.T) {
 
 		t.Run(test.name, func(t *testing.T) {
 
-			db := NewGestotorDb("../../../database/app_test.db")
+			db := generarGestorDbLimpio("codigo_SAP")
 			defer db.Close()
+
 			codigoSAP := NewCodigoSAPRepository(db)
 
 			if test.funcionCarga != nil {
@@ -259,9 +279,10 @@ func TestListarCodigoSAP(t *testing.T) {
 		errorEsperado error
 	}{
 		{
-			name:   "Lista con datos",
-			limit:  10,
-			offset: 0,
+			name:          "Lista con datos",
+			limit:         10,
+			offset:        0,
+			largoEsperado: 2,
 			funcionCarga: func(sr *codigoSAPRepository) {
 				sr.Cargar(&models.CodigoSAP{Codigo: randomString(6)})
 				sr.Cargar(&models.CodigoSAP{Codigo: randomString(6)})
@@ -285,7 +306,7 @@ func TestListarCodigoSAP(t *testing.T) {
 
 		t.Run(test.name, func(t *testing.T) {
 
-			db := NewGestotorDb("../../../database/app_test.db")
+			db := generarGestorDbLimpio("codigo_SAP")
 			defer db.Close()
 
 			codigoSAPManager := NewCodigoSAPRepository(db)
@@ -301,7 +322,7 @@ func TestListarCodigoSAP(t *testing.T) {
 					test.errorEsperado, err)
 			}
 
-			if test.largoEsperado != 0 && len(lista) != test.largoEsperado {
+			if len(lista) != test.largoEsperado {
 				t.Errorf("Cantidad incorrecta.\nSe esperaba:\n --- %v\nSe obtuvo:\n --- %v",
 					test.largoEsperado, len(lista))
 			}
