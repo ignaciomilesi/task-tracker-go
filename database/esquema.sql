@@ -31,8 +31,6 @@ CREATE TABLE IF NOT EXISTS codigo_ID (
     fecha_actualizacion DATETIME
 );
 
--- =========================
-
 CREATE TABLE IF NOT EXISTS documento (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     codigo TEXT NOT NULL,
@@ -40,6 +38,9 @@ CREATE TABLE IF NOT EXISTS documento (
     tipo TEXT NOT NULL,
     ubicacion_path TEXT
 );
+CREATE UNIQUE INDEX IF NOT EXISTS idx_documento_codigo
+ON documento(codigo);
+-- =========================
 
 -- =========================
 -- Tabla principal

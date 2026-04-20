@@ -24,3 +24,11 @@ type CodigoID struct {
 	FechaPedido        time.Time  `db:"fecha_pedido"`
 	FechaActualizacion *time.Time `db:"fecha_actualizacion"`
 }
+
+type Documento struct {
+	ID            int     `db:"id"`
+	Codigo        string  `db:"codigo"`
+	Titulo        string  `db:"titulo"`
+	Tipo          string  `db:"tipo"`
+	UbicacionPath *string `db:"ubicacion_path"`
+}

@@ -3,7 +3,7 @@ package appErrors
 import "errors"
 
 var (
-	ParametroDeBusquedaVacio = errors.New("El parámetro de brusquedad no puede ser vacío")
+	ParametroDeBusquedaVacio = errors.New("El parámetro de búsqueda no puede ser vacío")
 
 	SolicitanteNoEncontrado = errors.New("Solicitante no fue encontrado")
 	SolicitanteDuplicado    = errors.New("El Solicitante ya existe en la base de datos")
@@ -18,4 +18,7 @@ var (
 	CodigoIDNoEncontrado = errors.New("El Código ID no fue encontrado")
 	CodigoIDDuplicado    = errors.New("El Código ID ya existe en la base de datos")
 	CodigoIDVacio        = errors.New("El código ID que se desea dar de alta esta en blanco")
+
+	DocumentoDuplicado    = errors.New("El documento ya existe en la base de datos")
+	DocumentoNoEncontrado = errors.New("El documento no fue encontrado")
 )
