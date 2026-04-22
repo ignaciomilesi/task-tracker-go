@@ -81,11 +81,11 @@ CREATE TABLE IF NOT EXISTS avance (
 
 CREATE TABLE IF NOT EXISTS adjunto (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
-    id_pendiente INTEGER NOT NULL,
-    descripcion TEXT,
-    mail_path TEXT,
+    pendiente_id INTEGER NOT NULL,
+    descripcion TEXT NOT NULL,
+    archivo_path TEXT NOT NULL,
 
-    FOREIGN KEY (id_pendiente) REFERENCES pendientes(id) ON DELETE CASCADE
+    FOREIGN KEY (pendiente_id) REFERENCES pendientes(id) ON DELETE CASCADE
 );
 
 -- =========================
@@ -99,7 +99,7 @@ CREATE TABLE IF NOT EXISTS ti_pendientes_documento (
     PRIMARY KEY (pendiente_id, documento_id),
 
     FOREIGN KEY (pendiente_id) REFERENCES pendientes(id) ON DELETE CASCADE,
-    FOREIGN KEY (documento_id) REFERENCES documento(id)
+    FOREIGN KEY (documento_id) REFERENCES documento(id) ON DELETE CASCADE
 );
 
 CREATE TABLE IF NOT EXISTS ti_pendientes_codigo_sap (
@@ -109,7 +109,7 @@ CREATE TABLE IF NOT EXISTS ti_pendientes_codigo_sap (
     PRIMARY KEY (pendiente_id, codigo_sap_codigo),
 
     FOREIGN KEY (pendiente_id) REFERENCES pendientes(id) ON DELETE CASCADE,
-    FOREIGN KEY (codigo_sap_codigo) REFERENCES codigo_SAP(codigo)
+    FOREIGN KEY (codigo_sap_codigo) REFERENCES codigo_SAP(codigo) ON DELETE CASCADE
 );
 
 CREATE TABLE IF NOT EXISTS ti_pendientes_codigo_id (
@@ -119,5 +119,5 @@ CREATE TABLE IF NOT EXISTS ti_pendientes_codigo_id (
     PRIMARY KEY (pendiente_id, codigo_id_codigo),
 
     FOREIGN KEY (pendiente_id) REFERENCES pendientes(id) ON DELETE CASCADE,
-    FOREIGN KEY (codigo_id_codigo) REFERENCES codigo_ID(codigo)
+    FOREIGN KEY (codigo_id_codigo) REFERENCES codigo_ID(codigo) ON DELETE CASCADE
 );

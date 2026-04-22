@@ -58,3 +58,10 @@ type Avance struct {
 	Fecha       time.Time `db:"fecha"`
 	MailPath    *string   `db:"mail_path"`
 }
+
+type Adjunto struct {
+	ID          int    `db:"id"`
+	PendienteID int    `db:"pendiente_id"`
+	Descripcion string `db:"descripcion"`
+	ArchivoPath string `db:"archivo_path"`
+}
