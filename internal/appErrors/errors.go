@@ -5,7 +5,7 @@ import "errors"
 var (
 	ParametroDeBusquedaVacio = errors.New("El parámetro de búsqueda no puede ser vacío")
 
-	SolicitanteNoEncontrado = errors.New("Solicitante no fue encontrado")
+	SolicitanteNoEncontrado = errors.New("El Solicitante no fue encontrado")
 	SolicitanteDuplicado    = errors.New("El Solicitante ya existe en la base de datos")
 
 	ColaboradorNoEncontrado = errors.New("El Colaborador no fue encontrado")
@@ -21,4 +21,6 @@ var (
 
 	DocumentoDuplicado    = errors.New("El documento ya existe en la base de datos")
 	DocumentoNoEncontrado = errors.New("El documento no fue encontrado")
+
+	PendienteNoEncontrado = errors.New("El Pendiente no fue encontrado")
 )

@@ -11,5 +11,10 @@ func NewGestotorDb(dataBasePath string) *sql.DB {
 		log.Fatal(err)
 	}
 
+	_, err = db.Exec("PRAGMA foreign_keys = ON")
+	if err != nil {
+		log.Fatal(err)
+	}
+
 	return db
 }

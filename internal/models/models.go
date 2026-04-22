@@ -32,3 +32,21 @@ type Documento struct {
 	Tipo          string  `db:"tipo"`
 	UbicacionPath *string `db:"ubicacion_path"`
 }
+
+type Pendientes struct {
+	ID          int    `db:"id"`
+	Titulo      string `db:"titulo"`
+	Descripcion string `db:"descripcion"`
+
+	SolicitanteID int       `db:"solicitante_id"`
+	FechaPedido   time.Time `db:"fecha_pedido"`
+
+	AsignadoID    *int       `db:"asignado_id"` //colaborador
+	FechaAsignado *time.Time `db:"fecha_asignado"`
+	Finalizado    bool       `db:"finalizado"`
+
+	Cierre      *string    `db:"cierre"`
+	FechaCierre *time.Time `db:"fecha_cierre"`
+
+	IdentificacionTablaPendiente *string `db:"identificacion_tabla_pendiente"`
+}

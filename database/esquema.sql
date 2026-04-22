@@ -40,7 +40,6 @@ CREATE TABLE IF NOT EXISTS documento (
 );
 CREATE UNIQUE INDEX IF NOT EXISTS idx_documento_codigo
 ON documento(codigo);
--- =========================
 
 -- =========================
 -- Tabla principal
@@ -59,6 +58,7 @@ CREATE TABLE IF NOT EXISTS pendientes (
 
     cierre TEXT,
     fecha_cierre DATETIME,
+    finalizado INTEGER NOT NULL DEFAULT 0,
 
     identificacion_tabla_pendiente TEXT,
 
@@ -67,7 +67,6 @@ CREATE TABLE IF NOT EXISTS pendientes (
 );
 
 -- =========================
--- Avances
 -- =========================
 
 CREATE TABLE IF NOT EXISTS avance (
@@ -79,10 +78,6 @@ CREATE TABLE IF NOT EXISTS avance (
 
     FOREIGN KEY (id_pendiente) REFERENCES pendientes(id) ON DELETE CASCADE
 );
-
--- =========================
--- Adjunto
--- =========================
 
 CREATE TABLE IF NOT EXISTS adjunto (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
