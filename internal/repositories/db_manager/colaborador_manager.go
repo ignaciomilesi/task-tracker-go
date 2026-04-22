@@ -21,7 +21,7 @@ func NewColaboradorRepository(db *sql.DB) *colaboradorRepository {
 }
 
 // Crear nuevo colaborador, devuelve el id creado
-func (r *colaboradorRepository) Crear(NuevoColaborador *models.Colaborador) (int64, error) {
+func (r *colaboradorRepository) Crear(NuevoColaborador *models.Colaborador) (int, error) {
 	res, err := r.db.Exec(
 		"INSERT INTO colaborador (nombre) VALUES (?)",
 		NuevoColaborador.Nombre,
@@ -42,7 +42,7 @@ func (r *colaboradorRepository) Crear(NuevoColaborador *models.Colaborador) (int
 		return 0, fmt.Errorf("Error inesperado, detalle: %v", err)
 	}
 
-	return id, nil
+	return int(id), nil
 }
 
 func (r *colaboradorRepository) ObtenerIDPorNombre(nombre string) (int, error) {

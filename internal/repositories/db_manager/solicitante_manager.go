@@ -21,7 +21,7 @@ func NewsolicitanteRepository(db *sql.DB) *solicitanteRepository {
 }
 
 // Crear nuevo solicitante, devuelve el id creado
-func (r *solicitanteRepository) Crear(nuevoSolicitante *models.Solicitante) (int64, error) {
+func (r *solicitanteRepository) Crear(nuevoSolicitante *models.Solicitante) (int, error) {
 
 	res, err := r.db.Exec(
 		"INSERT INTO solicitante (nombre) VALUES (?)",
@@ -42,7 +42,7 @@ func (r *solicitanteRepository) Crear(nuevoSolicitante *models.Solicitante) (int
 		return 0, fmt.Errorf("Error inesperado, detalle: %v", err)
 	}
 
-	return id, nil
+	return int(id), nil
 }
 
 func (r *solicitanteRepository) ObtenerIDPorNombre(nombre string) (int, error) {
