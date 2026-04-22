@@ -50,3 +50,11 @@ type Pendientes struct {
 
 	IdentificacionTablaPendiente *string `db:"identificacion_tabla_pendiente"`
 }
+
+type Avance struct {
+	ID          int       `db:"id"`
+	PendienteID int       `db:"pendiente_id"`
+	Descripcion string    `db:"descripcion"`
+	Fecha       time.Time `db:"fecha"`
+	MailPath    *string   `db:"mail_path"`
+}

@@ -71,12 +71,12 @@ CREATE TABLE IF NOT EXISTS pendientes (
 
 CREATE TABLE IF NOT EXISTS avance (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
-    id_pendiente INTEGER NOT NULL,
+    pendiente_id INTEGER NOT NULL,
     descripcion TEXT NOT NULL,
     fecha DATETIME DEFAULT CURRENT_TIMESTAMP,
     mail_path TEXT,
 
-    FOREIGN KEY (id_pendiente) REFERENCES pendientes(id) ON DELETE CASCADE
+    FOREIGN KEY (pendiente_id) REFERENCES pendientes(id) ON DELETE CASCADE
 );
 
 CREATE TABLE IF NOT EXISTS adjunto (
@@ -92,7 +92,7 @@ CREATE TABLE IF NOT EXISTS adjunto (
 -- Tablas intermedias (N:N)
 -- =========================
 
-CREATE TABLE IF NOT EXISTS pendientes_documento (
+CREATE TABLE IF NOT EXISTS ti_pendientes_documento (
     pendiente_id INTEGER NOT NULL,
     documento_id INTEGER NOT NULL,
 
@@ -102,7 +102,7 @@ CREATE TABLE IF NOT EXISTS pendientes_documento (
     FOREIGN KEY (documento_id) REFERENCES documento(id)
 );
 
-CREATE TABLE IF NOT EXISTS pendientes_codigo_sap (
+CREATE TABLE IF NOT EXISTS ti_pendientes_codigo_sap (
     pendiente_id INTEGER NOT NULL,
     codigo_sap_codigo TEXT NOT NULL,
 
@@ -112,7 +112,7 @@ CREATE TABLE IF NOT EXISTS pendientes_codigo_sap (
     FOREIGN KEY (codigo_sap_codigo) REFERENCES codigo_SAP(codigo)
 );
 
-CREATE TABLE IF NOT EXISTS pendientes_codigo_id (
+CREATE TABLE IF NOT EXISTS ti_pendientes_codigo_id (
     pendiente_id INTEGER NOT NULL,
     codigo_id_codigo TEXT NOT NULL,
 

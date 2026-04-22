@@ -24,4 +24,6 @@ var (
 	DocumentoNoEncontrado = errors.New("El documento no fue encontrado")
 
 	PendienteNoEncontrado = errors.New("El Pendiente no fue encontrado")
+
+	AvanceNoEncontrado = errors.New("El avance no fue encontrado")
 )
