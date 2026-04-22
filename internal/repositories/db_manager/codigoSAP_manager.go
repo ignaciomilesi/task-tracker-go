@@ -24,6 +24,10 @@ func NewCodigoSAPRepository(db *sql.DB) *codigoSAPRepository {
 // Cargar nuevo código SAP
 func (r *codigoSAPRepository) Cargar(NuevoCodigoSap *models.CodigoSAP) error {
 
+	if NuevoCodigoSap == nil {
+		return appErrors.ParametroDeCargaVacio
+	}
+
 	if strings.TrimSpace(NuevoCodigoSap.Codigo) == "" {
 		return appErrors.CodigoSAPVacio
 	}

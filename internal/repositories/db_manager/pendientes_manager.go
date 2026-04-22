@@ -23,6 +23,9 @@ func NewPendientesRepository(db *sql.DB) *pendientesRepository {
 
 func (r *pendientesRepository) Crear(p *models.Pendientes) (int, error) {
 
+	if p == nil {
+		return 0, appErrors.ParametroDeCargaVacio
+	}
 	result, err := r.db.Exec(
 		`INSERT INTO pendientes (
 			titulo, descripcion, solicitante_id, fecha_pedido

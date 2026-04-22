@@ -3,6 +3,7 @@ package appErrors
 import "errors"
 
 var (
+	ParametroDeCargaVacio    = errors.New("El parámetro de carga no puede ser vacío")
 	ParametroDeBusquedaVacio = errors.New("El parámetro de búsqueda no puede ser vacío")
 
 	SolicitanteNoEncontrado = errors.New("El Solicitante no fue encontrado")

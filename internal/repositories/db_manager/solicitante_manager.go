@@ -23,6 +23,10 @@ func NewsolicitanteRepository(db *sql.DB) *solicitanteRepository {
 // Crear nuevo solicitante, devuelve el id creado
 func (r *solicitanteRepository) Crear(nuevoSolicitante *models.Solicitante) (int, error) {
 
+	if nuevoSolicitante == nil {
+		return 0, appErrors.ParametroDeCargaVacio
+	}
+
 	res, err := r.db.Exec(
 		"INSERT INTO solicitante (nombre) VALUES (?)",
 		nuevoSolicitante.Nombre,

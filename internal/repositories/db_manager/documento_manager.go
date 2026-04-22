@@ -23,6 +23,9 @@ func NewDocumentoRepository(db *sql.DB) *documentoRepository {
 // Cargar nuevo documento
 func (r *documentoRepository) Cargar(doc *models.Documento) error {
 
+	if doc == nil {
+		return appErrors.ParametroDeCargaVacio
+	}
 	_, err := r.db.Exec(
 		`INSERT INTO documento (codigo, titulo, tipo, ubicacion_path)
 		 VALUES (?, ?, ?, ?)`,

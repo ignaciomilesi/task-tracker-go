@@ -25,6 +25,10 @@ func NewCodigoIDRepository(db *sql.DB) *codigoIDRepository {
 // Cargar nuevo código ID
 func (r *codigoIDRepository) Cargar(nuevoCodigoID *models.CodigoID) error {
 
+	if nuevoCodigoID == nil {
+		return appErrors.ParametroDeCargaVacio
+	}
+
 	if strings.TrimSpace(nuevoCodigoID.Codigo) == "" {
 		return appErrors.CodigoIDVacio
 	}
