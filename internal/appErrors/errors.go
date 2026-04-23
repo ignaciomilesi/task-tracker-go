@@ -28,4 +28,7 @@ var (
 	AvanceNoEncontrado = errors.New("El avance no fue encontrado")
 
 	AdjuntoNoEncontrado = errors.New("El adjunto no fue encontrado")
+
+	FkNoEncontrado    = errors.New("Uno de los IDs no existe (foreign key)")
+	RelacionDuplicada = errors.New("La relación entre ID ya existe en la base de datos")
 )
