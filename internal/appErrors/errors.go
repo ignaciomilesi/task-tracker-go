@@ -22,6 +22,7 @@ var (
 
 	DocumentoDuplicado    = errors.New("El documento ya existe en la base de datos")
 	DocumentoNoEncontrado = errors.New("El documento no fue encontrado")
+	CodigoDocumentoVacio  = errors.New("El código del documento que se desea cargar esta en blanco")
 
 	PendienteNoEncontrado = errors.New("El Pendiente no fue encontrado")
 
