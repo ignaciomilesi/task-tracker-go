@@ -32,14 +32,13 @@ CREATE TABLE IF NOT EXISTS codigo_ID (
 );
 
 CREATE TABLE IF NOT EXISTS documento (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    codigo TEXT NOT NULL,
+    codigo TEXT PRIMARY KEY,
+    emision TEXT NOT NULL,
     titulo TEXT NOT NULL,
     tipo TEXT NOT NULL,
-    ubicacion_path TEXT
+    ubicacion_path TEXT,
+    backup_path TEXT
 );
-CREATE UNIQUE INDEX IF NOT EXISTS idx_documento_codigo
-ON documento(codigo);
 
 -- =========================
 -- Tabla principal
@@ -94,12 +93,12 @@ CREATE TABLE IF NOT EXISTS adjunto (
 
 CREATE TABLE IF NOT EXISTS ti_pendientes_documento (
     pendiente_id INTEGER NOT NULL,
-    documento_id INTEGER NOT NULL,
+    documento_id TEXT NOT NULL,
 
     PRIMARY KEY (pendiente_id, documento_id),
 
     FOREIGN KEY (pendiente_id) REFERENCES pendientes(id) ON DELETE CASCADE,
-    FOREIGN KEY (documento_id) REFERENCES documento(id) ON DELETE CASCADE
+    FOREIGN KEY (documento_id) REFERENCES documento(codigo) ON DELETE CASCADE
 );
 
 CREATE TABLE IF NOT EXISTS ti_pendientes_codigo_sap (

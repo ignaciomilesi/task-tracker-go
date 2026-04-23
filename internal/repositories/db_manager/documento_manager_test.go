@@ -292,8 +292,7 @@ func TestDocumentoActualizarPath(t *testing.T) {
 				test.funcionCarga(repo, test.codigo)
 			}
 
-			path := "/nuevo/path.pdf"
-			err := repo.ActualizarPath(test.codigo, &path)
+			err := repo.ActualizarPath(test.codigo, "/nuevo/path.pdf")
 
 			if !errors.Is(err, test.errorEsperado) {
 				t.Errorf("Error inesperado.\nEsperado: %v\nObtenido: %v",

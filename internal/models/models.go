@@ -26,11 +26,12 @@ type CodigoID struct {
 }
 
 type Documento struct {
-	ID            int     `db:"id"`
 	Codigo        string  `db:"codigo"`
+	Emision       string  `db:"emision"`
 	Titulo        string  `db:"titulo"`
 	Tipo          string  `db:"tipo"`
 	UbicacionPath *string `db:"ubicacion_path"`
+	BackupPath    *string `db:"backup_path"`
 }
 
 type Pendientes struct {

@@ -26,19 +26,26 @@ func (r *documentoRepository) Cargar(doc *models.Documento) error {
 	if doc == nil {
 		return appErrors.ParametroDeCargaVacio
 	}
+
+	if strings.TrimSpace(doc.Codigo) == "" {
+		return appErrors.CodigoDocumentoVacio
+	}
+
 	_, err := r.db.Exec(
-		`INSERT INTO documento (codigo, titulo, tipo, ubicacion_path)
-		 VALUES (?, ?, ?, ?)`,
+		`INSERT INTO documento (codigo, emision, titulo, tipo, ubicacion_path, backup_path)
+		 VALUES (?, ?, ?, ?, ?, ?)`,
 		doc.Codigo,
+		doc.Emision,
 		doc.Titulo,
 		doc.Tipo,
 		doc.UbicacionPath,
+		doc.BackupPath,
 	)
 
 	if err != nil {
 		var sqliteErr sqlite3.Error
 		if errors.As(err, &sqliteErr) {
-			if sqliteErr.ExtendedCode == sqlite3.ErrConstraintUnique {
+			if sqliteErr.ExtendedCode == sqlite3.ErrConstraintPrimaryKey {
 				return appErrors.DocumentoDuplicado
 			}
 		}
@@ -58,16 +65,17 @@ func (r *documentoRepository) ObtenerDetalle(codigo string) (*models.Documento, 
 	var d models.Documento
 
 	err := r.db.QueryRow(
-		`SELECT id, codigo, titulo, tipo, ubicacion_path
+		`SELECT codigo, emision, titulo, tipo, ubicacion_path, backup_path
 		 FROM documento
 		 WHERE codigo = ?`,
 		codigo,
 	).Scan(
-		&d.ID,
 		&d.Codigo,
+		&d.Emision,
 		&d.Titulo,
 		&d.Tipo,
 		&d.UbicacionPath,
+		&d.BackupPath,
 	)
 
 	if err == sql.ErrNoRows {
@@ -88,7 +96,7 @@ func (r *documentoRepository) FiltrarPorTipo(tipo string) ([]models.Documento, e
 	}
 
 	rows, err := r.db.Query(
-		`SELECT id, codigo, titulo, tipo, ubicacion_path
+		`SELECT codigo, emision, titulo, tipo, ubicacion_path, backup_path
 		 FROM documento
 		 WHERE tipo = ?`,
 		tipo,
@@ -104,11 +112,12 @@ func (r *documentoRepository) FiltrarPorTipo(tipo string) ([]models.Documento, e
 		var d models.Documento
 
 		err := rows.Scan(
-			&d.ID,
 			&d.Codigo,
+			&d.Emision,
 			&d.Titulo,
 			&d.Tipo,
 			&d.UbicacionPath,
+			&d.BackupPath,
 		)
 		if err != nil {
 			return nil, fmt.Errorf("error inesperado: %v", err)
@@ -132,7 +141,7 @@ func (r *documentoRepository) FiltrarPorTitulo(titulo string) ([]models.Document
 	}
 
 	rows, err := r.db.Query(
-		`SELECT id, codigo, titulo, tipo, ubicacion_path
+		`SELECT codigo, emision, titulo, tipo, ubicacion_path, backup_path
 		 FROM documento
 		 WHERE titulo LIKE ?`,
 		"%"+titulo+"%",
@@ -148,11 +157,12 @@ func (r *documentoRepository) FiltrarPorTitulo(titulo string) ([]models.Document
 		var d models.Documento
 
 		err := rows.Scan(
-			&d.ID,
 			&d.Codigo,
+			&d.Emision,
 			&d.Titulo,
 			&d.Tipo,
 			&d.UbicacionPath,
+			&d.BackupPath,
 		)
 		if err != nil {
 			return nil, fmt.Errorf("error inesperado: %v", err)
@@ -169,15 +179,51 @@ func (r *documentoRepository) FiltrarPorTitulo(titulo string) ([]models.Document
 }
 
 // Actualizar path
-func (r *documentoRepository) ActualizarPath(codigo string, nuevoPath *string) error {
+func (r *documentoRepository) ActualizarPath(codigo string, nuevoPath string) error {
 
 	if strings.TrimSpace(codigo) == "" {
 		return appErrors.ParametroDeBusquedaVacio
+	}
+	if strings.TrimSpace(nuevoPath) == "" {
+		return appErrors.ParametroDeCargaVacio
 	}
 
 	result, err := r.db.Exec(
 		`UPDATE documento
 		 SET ubicacion_path = ?
+		 WHERE codigo = ?`,
+		nuevoPath,
+		codigo,
+	)
+	if err != nil {
+		return fmt.Errorf("error inesperado: %v", err)
+	}
+
+	rowsAffected, err := result.RowsAffected()
+	if err != nil {
+		return fmt.Errorf("error obteniendo filas afectadas: %v", err)
+	}
+
+	if rowsAffected == 0 {
+		return appErrors.DocumentoNoEncontrado
+	}
+
+	return nil
+}
+
+// Actualizar backup path
+func (r *documentoRepository) ActualizarBackupPath(codigo string, nuevoPath string) error {
+
+	if strings.TrimSpace(codigo) == "" {
+		return appErrors.ParametroDeBusquedaVacio
+	}
+	if strings.TrimSpace(nuevoPath) == "" {
+		return appErrors.ParametroDeCargaVacio
+	}
+
+	result, err := r.db.Exec(
+		`UPDATE documento
+		 SET backup_path = ?
 		 WHERE codigo = ?`,
 		nuevoPath,
 		codigo,
