@@ -2,6 +2,7 @@ package services
 
 import (
 	"context"
+	"strings"
 
 	"task-tracker-go/internal/appErrors"
 	"task-tracker-go/internal/models"
@@ -59,7 +60,7 @@ func NewSolicitanteService(repo solicitanteManagerDbInterface) *solicitanteServi
 
 // Crear crea un nuevo solicitante validando parámetros mínimos
 func (s *solicitanteService) Crear(ctx context.Context, nombre string) (int, error) {
-	if nombre == "" {
+	if strings.TrimSpace(nombre) == "" {
 		return 0, appErrors.ParametroDeCargaVacio
 	}
 
@@ -69,7 +70,7 @@ func (s *solicitanteService) Crear(ctx context.Context, nombre string) (int, err
 
 // ObtenerIDPorNombre devuelve el id correspondiente al nombre provisto
 func (s *solicitanteService) ObtenerIDPorNombre(ctx context.Context, nombre string) (int, error) {
-	if nombre == "" {
+	if strings.TrimSpace(nombre) == "" {
 		return 0, appErrors.ParametroDeBusquedaVacio
 	}
 	return s.repo.ObtenerIDPorNombre(ctx, nombre)
@@ -77,17 +78,17 @@ func (s *solicitanteService) ObtenerIDPorNombre(ctx context.Context, nombre stri
 
 // Buscar busca solicitantes por una subcadena en el nombre
 func (s *solicitanteService) Buscar(ctx context.Context, parametro string) ([]models.Solicitante, error) {
+	if strings.TrimSpace(parametro) == "" {
+		return nil, appErrors.ParametroDeBusquedaVacio
+	}
 	return s.repo.Buscar(ctx, parametro)
 }
 
 // Listar devuelve un conjunto paginado de solicitantes
 func (s *solicitanteService) Listar(ctx context.Context, limit, offset int) ([]models.Solicitante, error) {
-	// si limit es 0 o negativo, ajustamos un valor por defecto razonable
-	if limit <= 0 {
-		limit = 50
-	}
-	if offset < 0 {
-		offset = 0
+
+	if limit <= 0 || offset < 0 {
+		return nil, appErrors.ParametrosDeListaInvalidos
 	}
 	return s.repo.Listar(ctx, limit, offset)
 }
