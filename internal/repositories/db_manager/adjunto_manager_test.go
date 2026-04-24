@@ -1,6 +1,7 @@
 package dbmanager
 
 import (
+	"context"
 	"database/sql"
 	"errors"
 	"task-tracker-go/internal/appErrors"
@@ -44,6 +45,8 @@ func TestAdjuntoCargar(t *testing.T) {
 		},
 	}
 
+	ctx := t.Context()
+
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
 
@@ -56,7 +59,7 @@ func TestAdjuntoCargar(t *testing.T) {
 
 			repo := NewAdjuntoRepository(db)
 
-			_, err := repo.Cargar(test.input)
+			_, err := repo.Cargar(ctx, test.input)
 
 			if !errors.Is(err, test.errorEsperado) {
 				t.Errorf("Error inesperado.\nEsperado: %v\nObtenido: %v",
@@ -71,13 +74,13 @@ func TestAdjuntoObtenerDetalle(t *testing.T) {
 	tests := []struct {
 		name          string
 		id            int
-		setup         func(*adjuntoRepository) int
+		setup         func(context.Context, *adjuntoRepository) int
 		errorEsperado error
 	}{
 		{
 			name: "Todo OK",
-			setup: func(r *adjuntoRepository) int {
-				id, err := r.Cargar(&models.Adjunto{
+			setup: func(ctx context.Context, r *adjuntoRepository) int {
+				id, err := r.Cargar(ctx, &models.Adjunto{
 					PendienteID: 1,
 					Descripcion: "detalle",
 				})
@@ -95,6 +98,7 @@ func TestAdjuntoObtenerDetalle(t *testing.T) {
 		},
 	}
 
+	ctx := t.Context()
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
 
@@ -108,10 +112,10 @@ func TestAdjuntoObtenerDetalle(t *testing.T) {
 			repo := NewAdjuntoRepository(db)
 
 			if test.setup != nil {
-				test.id = test.setup(repo)
+				test.id = test.setup(ctx, repo)
 			}
 
-			result, err := repo.ObtenerDetalle(test.id)
+			result, err := repo.ObtenerDetalle(ctx, test.id)
 
 			if !errors.Is(err, test.errorEsperado) {
 				t.Errorf("Error inesperado.\nEsperado: %v\nObtenido: %v",
@@ -129,13 +133,13 @@ func TestAdjuntoEliminar(t *testing.T) {
 
 	tests := []struct {
 		name          string
-		funcionCarga  func(*adjuntoRepository) int
+		funcionCarga  func(context.Context, *adjuntoRepository) int
 		errorEsperado error
 	}{
 		{
 			name: "Todo OK",
-			funcionCarga: func(r *adjuntoRepository) int {
-				id, err := r.Cargar(&models.Adjunto{
+			funcionCarga: func(ctx context.Context, r *adjuntoRepository) int {
+				id, err := r.Cargar(ctx, &models.Adjunto{
 					PendienteID: 1,
 					Descripcion: "para borrar",
 				})
@@ -153,6 +157,7 @@ func TestAdjuntoEliminar(t *testing.T) {
 		},
 	}
 
+	ctx := t.Context()
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
 
@@ -167,10 +172,10 @@ func TestAdjuntoEliminar(t *testing.T) {
 
 			id := 9999
 			if test.funcionCarga != nil {
-				id = test.funcionCarga(repo)
+				id = test.funcionCarga(ctx, repo)
 			}
 
-			err := repo.Eliminar(id)
+			err := repo.Eliminar(ctx, id)
 
 			if !errors.Is(err, test.errorEsperado) {
 				t.Errorf("Error inesperado.\nEsperado: %v\nObtenido: %v",
@@ -185,7 +190,7 @@ func TestAdjuntoFiltrarPorPendiente(t *testing.T) {
 	tests := []struct {
 		name          string
 		pendienteID   int
-		funcionCarga  func(*adjuntoRepository)
+		funcionCarga  func(context.Context, *adjuntoRepository)
 		largoEsperado int
 		errorEsperado error
 	}{
@@ -198,15 +203,15 @@ func TestAdjuntoFiltrarPorPendiente(t *testing.T) {
 		{
 			name:        "Con resultados",
 			pendienteID: 1,
-			funcionCarga: func(r *adjuntoRepository) {
-				_, err := r.Cargar(&models.Adjunto{
+			funcionCarga: func(ctx context.Context, r *adjuntoRepository) {
+				_, err := r.Cargar(ctx, &models.Adjunto{
 					PendienteID: 1,
 					Descripcion: "a1",
 				})
 				if err != nil {
 					t.Errorf("Error al crear adjunto: %v", err)
 				}
-				_, err = r.Cargar(&models.Adjunto{
+				_, err = r.Cargar(ctx, &models.Adjunto{
 					PendienteID: 1,
 					Descripcion: "a2",
 				})
@@ -219,6 +224,7 @@ func TestAdjuntoFiltrarPorPendiente(t *testing.T) {
 		},
 	}
 
+	ctx := t.Context()
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
 
@@ -232,10 +238,10 @@ func TestAdjuntoFiltrarPorPendiente(t *testing.T) {
 			repo := NewAdjuntoRepository(db)
 
 			if test.funcionCarga != nil {
-				test.funcionCarga(repo)
+				test.funcionCarga(ctx, repo)
 			}
 
-			lista, err := repo.FiltrarPorPendiente(test.pendienteID)
+			lista, err := repo.FiltrarPorPendiente(ctx, test.pendienteID)
 
 			if !errors.Is(err, test.errorEsperado) {
 				t.Errorf("Error inesperado.\nEsperado: %v\nObtenido: %v",

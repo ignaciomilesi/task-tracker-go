@@ -1,6 +1,7 @@
 package dbmanager
 
 import (
+	"context"
 	"errors"
 	"task-tracker-go/internal/appErrors"
 	"task-tracker-go/internal/models"
@@ -15,7 +16,7 @@ func TestCargarCodigoSAP(t *testing.T) {
 	tests := []struct {
 		name          string
 		codigo        models.CodigoSAP
-		funcionCarga  func(*codigoSAPRepository, *models.CodigoSAP)
+		funcionCarga  func(context.Context, *codigoSAPRepository, *models.CodigoSAP)
 		errorEsperado error
 	}{
 		{
@@ -40,8 +41,8 @@ func TestCargarCodigoSAP(t *testing.T) {
 				Codigo:      randomString(5),
 				Descripcion: &descripPrueba,
 			},
-			funcionCarga: func(cs *codigoSAPRepository, s *models.CodigoSAP) {
-				cs.Cargar(s)
+			funcionCarga: func(ctx context.Context, cs *codigoSAPRepository, s *models.CodigoSAP) {
+				cs.Cargar(ctx, s)
 			},
 			errorEsperado: appErrors.CodigoSAPDuplicado,
 		},
@@ -54,7 +55,7 @@ func TestCargarCodigoSAP(t *testing.T) {
 			errorEsperado: nil,
 		},
 	}
-
+	ctx := t.Context()
 	for _, test := range tests {
 
 		t.Run(test.name, func(t *testing.T) {
@@ -65,10 +66,10 @@ func TestCargarCodigoSAP(t *testing.T) {
 			codigoSAP := NewCodigoSAPRepository(db)
 
 			if test.funcionCarga != nil {
-				test.funcionCarga(codigoSAP, &test.codigo)
+				test.funcionCarga(ctx, codigoSAP, &test.codigo)
 			}
 
-			err := codigoSAP.Cargar(&test.codigo)
+			err := codigoSAP.Cargar(ctx, &test.codigo)
 
 			if !errors.Is(err, test.errorEsperado) {
 
@@ -84,14 +85,14 @@ func TestObtenerDetalleCodigoSAP(t *testing.T) {
 	tests := []struct {
 		name          string
 		codigo        string
-		funcionCarga  func(*codigoSAPRepository, *models.CodigoSAP)
+		funcionCarga  func(context.Context, *codigoSAPRepository, *models.CodigoSAP)
 		errorEsperado error
 	}{
 		{
 			name:   "Todo Ok",
 			codigo: randomString(5),
-			funcionCarga: func(cs *codigoSAPRepository, s *models.CodigoSAP) {
-				cs.Cargar(s)
+			funcionCarga: func(ctx context.Context, cs *codigoSAPRepository, s *models.CodigoSAP) {
+				cs.Cargar(ctx, s)
 			},
 			errorEsperado: nil,
 		},
@@ -101,7 +102,7 @@ func TestObtenerDetalleCodigoSAP(t *testing.T) {
 			errorEsperado: appErrors.CodigoSAPNoEncontrado,
 		},
 	}
-
+	ctx := t.Context()
 	for _, test := range tests {
 
 		t.Run(test.name, func(t *testing.T) {
@@ -112,11 +113,11 @@ func TestObtenerDetalleCodigoSAP(t *testing.T) {
 			codigoSAPManager := NewCodigoSAPRepository(db)
 
 			if test.funcionCarga != nil {
-				test.funcionCarga(codigoSAPManager, &models.CodigoSAP{
+				test.funcionCarga(ctx, codigoSAPManager, &models.CodigoSAP{
 					Codigo: test.codigo,
 				})
 			}
-			_, err := codigoSAPManager.ObtenerDetalle(test.codigo)
+			_, err := codigoSAPManager.ObtenerDetalle(ctx, test.codigo)
 
 			if !errors.Is(err, test.errorEsperado) {
 
@@ -133,7 +134,7 @@ func TestBuscarPorDescripcionCodigoSAP(t *testing.T) {
 	tests := []struct {
 		name          string
 		filtro        string
-		funcionCarga  func(*codigoSAPRepository)
+		funcionCarga  func(context.Context, *codigoSAPRepository)
 		largoEsperado int
 		errorEsperado error
 	}{
@@ -146,16 +147,16 @@ func TestBuscarPorDescripcionCodigoSAP(t *testing.T) {
 		{
 			name:   "Con resultados",
 			filtro: "filtro",
-			funcionCarga: func(r *codigoSAPRepository) {
+			funcionCarga: func(ctx context.Context, r *codigoSAPRepository) {
 				descripcionTest := "filtro"
-				if err := r.Cargar(
+				if err := r.Cargar(ctx,
 					&models.CodigoSAP{
 						Codigo:      randomString(4),
 						Descripcion: &descripcionTest,
 					}); err != nil {
 					t.Errorf("Error al crear colaborador. Detalle: %v", err)
 				}
-				if err := r.Cargar(
+				if err := r.Cargar(ctx,
 					&models.CodigoSAP{
 						Codigo:      randomString(4),
 						Descripcion: &descripcionTest,
@@ -168,6 +169,7 @@ func TestBuscarPorDescripcionCodigoSAP(t *testing.T) {
 		},
 	}
 
+	ctx := t.Context()
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
 
@@ -177,10 +179,10 @@ func TestBuscarPorDescripcionCodigoSAP(t *testing.T) {
 			repo := NewCodigoSAPRepository(db)
 
 			if test.funcionCarga != nil {
-				test.funcionCarga(repo)
+				test.funcionCarga(ctx, repo)
 			}
 
-			lista, err := repo.BuscarPorDescripcion(test.filtro)
+			lista, err := repo.BuscarPorDescripcion(ctx, test.filtro)
 
 			if !errors.Is(err, test.errorEsperado) {
 				t.Errorf("Error inesperado.\nEsperado: %v\nObtenido: %v",
@@ -202,16 +204,16 @@ func TestModificarDescripcionCodigoSAP(t *testing.T) {
 		name                  string
 		codigo                string
 		descripcionModificada string
-		funcionCarga          func(*codigoSAPRepository, string)
+		funcionCarga          func(context.Context, *codigoSAPRepository, string)
 		errorEsperado         error
 	}{
 		{
 			name:                  "Todo Ok",
 			codigo:                randomString(5),
 			descripcionModificada: "description modificación de prueba",
-			funcionCarga: func(cs *codigoSAPRepository, codigo string) {
+			funcionCarga: func(ctx context.Context, cs *codigoSAPRepository, codigo string) {
 				descripcionInicial := "description inicial de prueba"
-				cs.Cargar(&models.CodigoSAP{
+				cs.Cargar(ctx, &models.CodigoSAP{
 					Codigo:      codigo,
 					Descripcion: &descripcionInicial,
 				})
@@ -233,8 +235,8 @@ func TestModificarDescripcionCodigoSAP(t *testing.T) {
 		{
 			name:   "Description inicial nil",
 			codigo: randomString(5),
-			funcionCarga: func(cs *codigoSAPRepository, codigo string) {
-				cs.Cargar(&models.CodigoSAP{
+			funcionCarga: func(ctx context.Context, cs *codigoSAPRepository, codigo string) {
+				cs.Cargar(ctx, &models.CodigoSAP{
 					Codigo:      codigo,
 					Descripcion: nil,
 				})
@@ -244,6 +246,7 @@ func TestModificarDescripcionCodigoSAP(t *testing.T) {
 		},
 	}
 
+	ctx := t.Context()
 	for _, test := range tests {
 
 		t.Run(test.name, func(t *testing.T) {
@@ -254,10 +257,10 @@ func TestModificarDescripcionCodigoSAP(t *testing.T) {
 			codigoSAP := NewCodigoSAPRepository(db)
 
 			if test.funcionCarga != nil {
-				test.funcionCarga(codigoSAP, test.codigo)
+				test.funcionCarga(ctx, codigoSAP, test.codigo)
 			}
 
-			err := codigoSAP.ModificarDescripcion(test.codigo, test.descripcionModificada)
+			err := codigoSAP.ModificarDescripcion(ctx, test.codigo, test.descripcionModificada)
 
 			if !errors.Is(err, test.errorEsperado) {
 
@@ -274,7 +277,7 @@ func TestListarCodigoSAP(t *testing.T) {
 		name          string
 		limit         int
 		offset        int
-		funcionCarga  func(*codigoSAPRepository)
+		funcionCarga  func(context.Context, *codigoSAPRepository)
 		largoEsperado int
 		errorEsperado error
 	}{
@@ -283,9 +286,9 @@ func TestListarCodigoSAP(t *testing.T) {
 			limit:         10,
 			offset:        0,
 			largoEsperado: 2,
-			funcionCarga: func(sr *codigoSAPRepository) {
-				sr.Cargar(&models.CodigoSAP{Codigo: randomString(6)})
-				sr.Cargar(&models.CodigoSAP{Codigo: randomString(6)})
+			funcionCarga: func(ctx context.Context, sr *codigoSAPRepository) {
+				sr.Cargar(ctx, &models.CodigoSAP{Codigo: randomString(6)})
+				sr.Cargar(ctx, &models.CodigoSAP{Codigo: randomString(6)})
 			},
 			errorEsperado: nil,
 		},
@@ -293,15 +296,16 @@ func TestListarCodigoSAP(t *testing.T) {
 			name:   "Respeta limit",
 			limit:  1,
 			offset: 0,
-			funcionCarga: func(sr *codigoSAPRepository) {
-				sr.Cargar(&models.CodigoSAP{Codigo: randomString(6)})
-				sr.Cargar(&models.CodigoSAP{Codigo: randomString(6)})
+			funcionCarga: func(ctx context.Context, sr *codigoSAPRepository) {
+				sr.Cargar(ctx, &models.CodigoSAP{Codigo: randomString(6)})
+				sr.Cargar(ctx, &models.CodigoSAP{Codigo: randomString(6)})
 			},
 			largoEsperado: 1,
 			errorEsperado: nil,
 		},
 	}
 
+	ctx := t.Context()
 	for _, test := range tests {
 
 		t.Run(test.name, func(t *testing.T) {
@@ -312,10 +316,10 @@ func TestListarCodigoSAP(t *testing.T) {
 			codigoSAPManager := NewCodigoSAPRepository(db)
 
 			if test.funcionCarga != nil {
-				test.funcionCarga(codigoSAPManager)
+				test.funcionCarga(ctx, codigoSAPManager)
 			}
 
-			lista, err := codigoSAPManager.Listar(test.limit, test.offset)
+			lista, err := codigoSAPManager.Listar(ctx, test.limit, test.offset)
 
 			if !errors.Is(err, test.errorEsperado) {
 				t.Errorf("Error no esperado.\nSe esperaba:\n --- %v\nSe obtuvo:\n --- %v",

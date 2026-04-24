@@ -1,6 +1,7 @@
 package dbmanager
 
 import (
+	"context"
 	"errors"
 	"task-tracker-go/internal/appErrors"
 	"task-tracker-go/internal/models"
@@ -13,7 +14,7 @@ func TestCodigoIDCargar(t *testing.T) {
 	tests := []struct {
 		name          string
 		input         *models.CodigoID
-		funcionCarga  func(*codigoIDRepository, *models.CodigoID)
+		funcionCarga  func(context.Context, *codigoIDRepository, *models.CodigoID)
 		errorEsperado error
 	}{
 		{
@@ -39,13 +40,13 @@ func TestCodigoIDCargar(t *testing.T) {
 				Estado:      "pendiente",
 				FechaPedido: time.Now(),
 			},
-			funcionCarga: func(r *codigoIDRepository, c *models.CodigoID) {
-				r.Cargar(c)
+			funcionCarga: func(ctx context.Context, r *codigoIDRepository, c *models.CodigoID) {
+				r.Cargar(ctx, c)
 			},
 			errorEsperado: appErrors.CodigoIDDuplicado,
 		},
 	}
-
+	ctx := t.Context()
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
 
@@ -55,10 +56,10 @@ func TestCodigoIDCargar(t *testing.T) {
 			repo := NewCodigoIDRepository(db)
 
 			if test.funcionCarga != nil {
-				test.funcionCarga(repo, test.input)
+				test.funcionCarga(ctx, repo, test.input)
 			}
 
-			err := repo.Cargar(test.input)
+			err := repo.Cargar(ctx, test.input)
 
 			if !errors.Is(err, test.errorEsperado) {
 				t.Errorf("Error inesperado.\nEsperado: %v\nObtenido: %v",
@@ -73,14 +74,14 @@ func TestCodigoIDObtenerDetalle(t *testing.T) {
 	tests := []struct {
 		name          string
 		codigo        string
-		funcionCarga  func(*codigoIDRepository, string)
+		funcionCarga  func(context.Context, *codigoIDRepository, string)
 		errorEsperado error
 	}{
 		{
 			name:   "Todo OK",
 			codigo: randomString(6),
-			funcionCarga: func(r *codigoIDRepository, codigo string) {
-				r.Cargar(&models.CodigoID{
+			funcionCarga: func(ctx context.Context, r *codigoIDRepository, codigo string) {
+				r.Cargar(ctx, &models.CodigoID{
 					Codigo:      codigo,
 					Estado:      "pendiente",
 					FechaPedido: time.Now(),
@@ -99,7 +100,7 @@ func TestCodigoIDObtenerDetalle(t *testing.T) {
 			errorEsperado: appErrors.CodigoIDNoEncontrado,
 		},
 	}
-
+	ctx := t.Context()
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
 
@@ -109,10 +110,10 @@ func TestCodigoIDObtenerDetalle(t *testing.T) {
 			repo := NewCodigoIDRepository(db)
 
 			if test.funcionCarga != nil {
-				test.funcionCarga(repo, test.codigo)
+				test.funcionCarga(ctx, repo, test.codigo)
 			}
 
-			result, err := repo.ObtenerDetalle(test.codigo)
+			result, err := repo.ObtenerDetalle(ctx, test.codigo)
 
 			if !errors.Is(err, test.errorEsperado) {
 				t.Errorf("Error inesperado.\nEsperado: %v\nObtenido: %v",
@@ -131,7 +132,7 @@ func TestCodigoIDFiltrarPorEstado(t *testing.T) {
 	tests := []struct {
 		name          string
 		estado        string
-		funcionCarga  func(*codigoIDRepository)
+		funcionCarga  func(context.Context, *codigoIDRepository)
 		largoEsperado int
 		errorEsperado error
 	}{
@@ -144,13 +145,13 @@ func TestCodigoIDFiltrarPorEstado(t *testing.T) {
 		{
 			name:   "Con resultados",
 			estado: "pendiente",
-			funcionCarga: func(r *codigoIDRepository) {
-				r.Cargar(&models.CodigoID{
+			funcionCarga: func(ctx context.Context, r *codigoIDRepository) {
+				r.Cargar(ctx, &models.CodigoID{
 					Codigo:      randomString(6),
 					Estado:      "pendiente",
 					FechaPedido: time.Now(),
 				})
-				r.Cargar(&models.CodigoID{
+				r.Cargar(ctx, &models.CodigoID{
 					Codigo:      randomString(6),
 					Estado:      "pendiente",
 					FechaPedido: time.Now(),
@@ -160,7 +161,7 @@ func TestCodigoIDFiltrarPorEstado(t *testing.T) {
 			errorEsperado: nil,
 		},
 	}
-
+	ctx := t.Context()
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
 
@@ -170,10 +171,10 @@ func TestCodigoIDFiltrarPorEstado(t *testing.T) {
 			repo := NewCodigoIDRepository(db)
 
 			if test.funcionCarga != nil {
-				test.funcionCarga(repo)
+				test.funcionCarga(ctx, repo)
 			}
 
-			lista, err := repo.FiltrarPorEstado(test.estado)
+			lista, err := repo.FiltrarPorEstado(ctx, test.estado)
 
 			if !errors.Is(err, test.errorEsperado) {
 				t.Errorf("Error inesperado.\nEsperado: %v\nObtenido: %v",
@@ -193,14 +194,14 @@ func TestCodigoIDActualizarEstado(t *testing.T) {
 	tests := []struct {
 		name          string
 		codigo        string
-		funcionCarga  func(*codigoIDRepository, string)
+		funcionCarga  func(context.Context, *codigoIDRepository, string)
 		errorEsperado error
 	}{
 		{
 			name:   "Todo OK",
 			codigo: randomString(6),
-			funcionCarga: func(r *codigoIDRepository, codigo string) {
-				r.Cargar(&models.CodigoID{
+			funcionCarga: func(ctx context.Context, r *codigoIDRepository, codigo string) {
+				r.Cargar(ctx, &models.CodigoID{
 					Codigo:      codigo,
 					Estado:      "pendiente",
 					FechaPedido: time.Now(),
@@ -219,7 +220,7 @@ func TestCodigoIDActualizarEstado(t *testing.T) {
 			errorEsperado: appErrors.CodigoIDNoEncontrado,
 		},
 	}
-
+	ctx := t.Context()
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
 
@@ -229,10 +230,10 @@ func TestCodigoIDActualizarEstado(t *testing.T) {
 			repo := NewCodigoIDRepository(db)
 
 			if test.funcionCarga != nil {
-				test.funcionCarga(repo, test.codigo)
+				test.funcionCarga(ctx, repo, test.codigo)
 			}
 
-			err := repo.ActualizarEstado(test.codigo, "aprobado", time.Now())
+			err := repo.ActualizarEstado(ctx, test.codigo, "aprobado", time.Now())
 
 			if !errors.Is(err, test.errorEsperado) {
 				t.Errorf("Error inesperado.\nEsperado: %v\nObtenido: %v",
@@ -246,7 +247,7 @@ func TestCodigoIDListar(t *testing.T) {
 
 	tests := []struct {
 		name          string
-		funcionCarga  func(*codigoIDRepository)
+		funcionCarga  func(context.Context, *codigoIDRepository)
 		largoEsperado int
 		errorEsperado error
 	}{
@@ -257,8 +258,8 @@ func TestCodigoIDListar(t *testing.T) {
 		},
 		{
 			name: "Con datos",
-			funcionCarga: func(r *codigoIDRepository) {
-				r.Cargar(&models.CodigoID{
+			funcionCarga: func(ctx context.Context, r *codigoIDRepository) {
+				r.Cargar(ctx, &models.CodigoID{
 					Codigo:      randomString(6),
 					Estado:      "pendiente",
 					FechaPedido: time.Now(),
@@ -268,7 +269,7 @@ func TestCodigoIDListar(t *testing.T) {
 			errorEsperado: nil,
 		},
 	}
-
+	ctx := t.Context()
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
 
@@ -278,10 +279,10 @@ func TestCodigoIDListar(t *testing.T) {
 			repo := NewCodigoIDRepository(db)
 
 			if test.funcionCarga != nil {
-				test.funcionCarga(repo)
+				test.funcionCarga(ctx, repo)
 			}
 
-			lista, err := repo.Listar(10, 0)
+			lista, err := repo.Listar(ctx, 10, 0)
 
 			if !errors.Is(err, test.errorEsperado) {
 				t.Errorf("Error inesperado.\nEsperado: %v\nObtenido: %v",

@@ -43,6 +43,7 @@ func TestVincularPendienteDocumento(t *testing.T) {
 		},
 	}
 
+	ctx := t.Context()
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
 
@@ -55,7 +56,7 @@ func TestVincularPendienteDocumento(t *testing.T) {
 
 			repo := NewTablaIntermediaRepository(db)
 
-			err := repo.VincularPendienteDocumento(test.pendienteID, test.documentoID)
+			err := repo.VincularPendienteDocumento(ctx, test.pendienteID, test.documentoID)
 
 			if !errors.Is(err, test.errorEsperado) {
 				t.Errorf("Esperado: %v\nObtenido: %v", test.errorEsperado, err)
@@ -86,6 +87,7 @@ func TestListarDocumentosPorPendiente(t *testing.T) {
 		},
 	}
 
+	ctx := t.Context()
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
 
@@ -98,7 +100,7 @@ func TestListarDocumentosPorPendiente(t *testing.T) {
 
 			repo := NewTablaIntermediaRepository(db)
 
-			lista, err := repo.ListarDocumentosPorPendiente(1)
+			lista, err := repo.ListarDocumentosPorPendiente(ctx, 1)
 
 			if err != nil {
 				t.Errorf("Error inesperado: %v", err)
@@ -147,6 +149,7 @@ func TestVincularPendienteCodigoSAP(t *testing.T) {
 		},
 	}
 
+	ctx := t.Context()
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
 
@@ -159,7 +162,7 @@ func TestVincularPendienteCodigoSAP(t *testing.T) {
 
 			repo := NewTablaIntermediaRepository(db)
 
-			err := repo.VincularPendienteCodigoSAP(test.pendienteID, test.codigoSAP)
+			err := repo.VincularPendienteCodigoSAP(ctx, test.pendienteID, test.codigoSAP)
 
 			if !errors.Is(err, test.errorEsperado) {
 				t.Errorf("Esperado: %v\nObtenido: %v", test.errorEsperado, err)
@@ -190,6 +193,7 @@ func TestListarCodigosSAPPorPendiente(t *testing.T) {
 		},
 	}
 
+	ctx := t.Context()
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
 
@@ -202,7 +206,7 @@ func TestListarCodigosSAPPorPendiente(t *testing.T) {
 
 			repo := NewTablaIntermediaRepository(db)
 
-			lista, err := repo.ListarCodigosSAPPorPendiente(1)
+			lista, err := repo.ListarCodigosSAPPorPendiente(ctx, 1)
 
 			if err != nil {
 				t.Errorf("Error inesperado: %v", err)
@@ -251,6 +255,7 @@ func TestVincularPendienteCodigoID(t *testing.T) {
 		},
 	}
 
+	ctx := t.Context()
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
 
@@ -263,7 +268,7 @@ func TestVincularPendienteCodigoID(t *testing.T) {
 
 			repo := NewTablaIntermediaRepository(db)
 
-			err := repo.VincularPendienteCodigoID(test.pendienteID, test.codigoID)
+			err := repo.VincularPendienteCodigoID(ctx, test.pendienteID, test.codigoID)
 
 			if !errors.Is(err, test.errorEsperado) {
 				t.Errorf("Esperado: %v\nObtenido: %v", test.errorEsperado, err)
@@ -294,6 +299,7 @@ func TestListarCodigosIDPorPendiente(t *testing.T) {
 		},
 	}
 
+	ctx := t.Context()
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
 
@@ -306,7 +312,7 @@ func TestListarCodigosIDPorPendiente(t *testing.T) {
 
 			repo := NewTablaIntermediaRepository(db)
 
-			lista, err := repo.ListarCodigosIDPorPendiente(1)
+			lista, err := repo.ListarCodigosIDPorPendiente(ctx, 1)
 
 			if err != nil {
 				t.Errorf("Error inesperado: %v", err)

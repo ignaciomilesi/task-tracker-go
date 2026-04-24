@@ -1,6 +1,7 @@
 package dbmanager
 
 import (
+	"context"
 	"database/sql"
 	"errors"
 	"fmt"
@@ -18,9 +19,9 @@ func NewTablaIntermediaRepository(db *sql.DB) *tablaIntermediaRepository {
 	return &tablaIntermediaRepository{db: db}
 }
 
-func (r *tablaIntermediaRepository) VincularPendienteDocumento(pendienteID, documentoID int) error {
+func (r *tablaIntermediaRepository) VincularPendienteDocumento(ctx context.Context, pendienteID, documentoID int) error {
 
-	_, err := r.db.Exec(
+	_, err := r.db.ExecContext(ctx,
 		`INSERT INTO ti_pendientes_documento (pendiente_id, documento_id)
 		 VALUES (?, ?)`,
 		pendienteID,
@@ -46,9 +47,9 @@ func (r *tablaIntermediaRepository) VincularPendienteDocumento(pendienteID, docu
 	return nil
 }
 
-func (r *tablaIntermediaRepository) VincularPendienteCodigoSAP(pendienteID int, codigoSAP string) error {
+func (r *tablaIntermediaRepository) VincularPendienteCodigoSAP(ctx context.Context, pendienteID int, codigoSAP string) error {
 
-	_, err := r.db.Exec(
+	_, err := r.db.ExecContext(ctx,
 		`INSERT INTO ti_pendientes_codigo_sap (pendiente_id, codigo_sap_codigo)
 		 VALUES (?, ?)`,
 		pendienteID,
@@ -74,9 +75,9 @@ func (r *tablaIntermediaRepository) VincularPendienteCodigoSAP(pendienteID int, 
 	return nil
 }
 
-func (r *tablaIntermediaRepository) VincularPendienteCodigoID(pendienteID int, codigoID string) error {
+func (r *tablaIntermediaRepository) VincularPendienteCodigoID(ctx context.Context, pendienteID int, codigoID string) error {
 
-	_, err := r.db.Exec(
+	_, err := r.db.ExecContext(ctx,
 		`INSERT INTO ti_pendientes_codigo_id (pendiente_id, codigo_id_codigo)
 		 VALUES (?, ?)`,
 		pendienteID,
@@ -102,9 +103,9 @@ func (r *tablaIntermediaRepository) VincularPendienteCodigoID(pendienteID int, c
 	return nil
 }
 
-func (r *tablaIntermediaRepository) ListarDocumentosPorPendiente(pendienteID int) ([]int, error) {
+func (r *tablaIntermediaRepository) ListarDocumentosPorPendiente(ctx context.Context, pendienteID int) ([]int, error) {
 
-	rows, err := r.db.Query(
+	rows, err := r.db.QueryContext(ctx,
 		`SELECT documento_id
 		 FROM ti_pendientes_documento
 		 WHERE pendiente_id = ?`,
@@ -134,9 +135,9 @@ func (r *tablaIntermediaRepository) ListarDocumentosPorPendiente(pendienteID int
 	return lista, nil
 }
 
-func (r *tablaIntermediaRepository) ListarCodigosSAPPorPendiente(pendienteID int) ([]string, error) {
+func (r *tablaIntermediaRepository) ListarCodigosSAPPorPendiente(ctx context.Context, pendienteID int) ([]string, error) {
 
-	rows, err := r.db.Query(
+	rows, err := r.db.QueryContext(ctx,
 		`SELECT codigo_sap_codigo
 		 FROM ti_pendientes_codigo_sap
 		 WHERE pendiente_id = ?`,
@@ -166,9 +167,9 @@ func (r *tablaIntermediaRepository) ListarCodigosSAPPorPendiente(pendienteID int
 	return lista, nil
 }
 
-func (r *tablaIntermediaRepository) ListarCodigosIDPorPendiente(pendienteID int) ([]string, error) {
+func (r *tablaIntermediaRepository) ListarCodigosIDPorPendiente(ctx context.Context, pendienteID int) ([]string, error) {
 
-	rows, err := r.db.Query(
+	rows, err := r.db.QueryContext(ctx,
 		`SELECT codigo_id_codigo
 		 FROM ti_pendientes_codigo_id
 		 WHERE pendiente_id = ?`,

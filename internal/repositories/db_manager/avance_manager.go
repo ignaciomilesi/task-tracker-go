@@ -1,6 +1,7 @@
 package dbmanager
 
 import (
+	"context"
 	"database/sql"
 	"errors"
 	"fmt"
@@ -20,13 +21,13 @@ func NewAvanceRepository(db *sql.DB) *avanceRepository {
 }
 
 // Cargar nuevo avance
-func (r *avanceRepository) Cargar(nuevoAvance *models.Avance) (int, error) {
+func (r *avanceRepository) Cargar(ctx context.Context, nuevoAvance *models.Avance) (int, error) {
 
 	if nuevoAvance == nil {
 		return 0, appErrors.ParametroDeCargaVacio
 	}
 
-	res, err := r.db.Exec(
+	res, err := r.db.ExecContext(ctx,
 		`INSERT INTO avance (pendiente_id, descripcion, fecha, mail_path)
 		 VALUES (?, ?, ?, ?)`,
 		nuevoAvance.PendienteID,
@@ -55,11 +56,11 @@ func (r *avanceRepository) Cargar(nuevoAvance *models.Avance) (int, error) {
 }
 
 // Obtener detalle por ID
-func (r *avanceRepository) ObtenerDetalle(id int) (*models.Avance, error) {
+func (r *avanceRepository) ObtenerDetalle(ctx context.Context, id int) (*models.Avance, error) {
 
 	var a models.Avance
 
-	err := r.db.QueryRow(
+	err := r.db.QueryRowContext(ctx,
 		`SELECT id, pendiente_id, descripcion, fecha, mail_path
 		 FROM avance
 		 WHERE id = ?`,
@@ -84,9 +85,9 @@ func (r *avanceRepository) ObtenerDetalle(id int) (*models.Avance, error) {
 }
 
 // Eliminar avance
-func (r *avanceRepository) Eliminar(id int) error {
+func (r *avanceRepository) Eliminar(ctx context.Context, id int) error {
 
-	result, err := r.db.Exec(
+	result, err := r.db.ExecContext(ctx,
 		`DELETE FROM avance WHERE id = ?`,
 		id,
 	)
@@ -107,9 +108,9 @@ func (r *avanceRepository) Eliminar(id int) error {
 }
 
 // Filtrar avances por PendienteID
-func (r *avanceRepository) FiltrarPorPendiente(pendienteID int) ([]models.Avance, error) {
+func (r *avanceRepository) FiltrarPorPendiente(ctx context.Context, pendienteID int) ([]models.Avance, error) {
 
-	rows, err := r.db.Query(
+	rows, err := r.db.QueryContext(ctx,
 		`SELECT id, pendiente_id, descripcion, fecha, mail_path
 		 FROM avance
 		 WHERE pendiente_id = ?

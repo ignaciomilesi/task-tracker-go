@@ -1,6 +1,7 @@
 package dbmanager
 
 import (
+	"context"
 	"database/sql"
 	"errors"
 	"fmt"
@@ -20,13 +21,13 @@ func NewAdjuntoRepository(db *sql.DB) *adjuntoRepository {
 }
 
 // Cargar nuevo adjunto
-func (r *adjuntoRepository) Cargar(nuevoAdjunto *models.Adjunto) (int, error) {
+func (r *adjuntoRepository) Cargar(ctx context.Context, nuevoAdjunto *models.Adjunto) (int, error) {
 
 	if nuevoAdjunto == nil {
 		return 0, appErrors.ParametroDeCargaVacio
 	}
 
-	res, err := r.db.Exec(
+	res, err := r.db.ExecContext(ctx,
 		`INSERT INTO adjunto (pendiente_id, descripcion, archivo_path)
 		 VALUES (?, ?, ?)`,
 		nuevoAdjunto.PendienteID,
@@ -52,11 +53,11 @@ func (r *adjuntoRepository) Cargar(nuevoAdjunto *models.Adjunto) (int, error) {
 }
 
 // Obtener detalle por ID
-func (r *adjuntoRepository) ObtenerDetalle(id int) (*models.Adjunto, error) {
+func (r *adjuntoRepository) ObtenerDetalle(ctx context.Context, id int) (*models.Adjunto, error) {
 
 	var a models.Adjunto
 
-	err := r.db.QueryRow(
+	err := r.db.QueryRowContext(ctx,
 		`SELECT id, pendiente_id, descripcion, archivo_path
 		 FROM adjunto
 		 WHERE id = ?`,
@@ -80,9 +81,9 @@ func (r *adjuntoRepository) ObtenerDetalle(id int) (*models.Adjunto, error) {
 }
 
 // Eliminar adjunto
-func (r *adjuntoRepository) Eliminar(id int) error {
+func (r *adjuntoRepository) Eliminar(ctx context.Context, id int) error {
 
-	result, err := r.db.Exec(
+	result, err := r.db.ExecContext(ctx,
 		`DELETE FROM adjunto WHERE id = ?`,
 		id,
 	)
@@ -103,9 +104,9 @@ func (r *adjuntoRepository) Eliminar(id int) error {
 }
 
 // Filtrar por PendienteID
-func (r *adjuntoRepository) FiltrarPorPendiente(pendienteID int) ([]models.Adjunto, error) {
+func (r *adjuntoRepository) FiltrarPorPendiente(ctx context.Context, pendienteID int) ([]models.Adjunto, error) {
 
-	rows, err := r.db.Query(
+	rows, err := r.db.QueryContext(ctx,
 		`SELECT id, pendiente_id, descripcion, archivo_path
 		 FROM adjunto
 		 WHERE pendiente_id = ?`,
@@ -142,9 +143,9 @@ func (r *adjuntoRepository) FiltrarPorPendiente(pendienteID int) ([]models.Adjun
 }
 
 // Actualizar Path
-func (r *adjuntoRepository) ActualizarPath(id int, path string) error {
+func (r *adjuntoRepository) ActualizarPath(ctx context.Context, id int, path string) error {
 
-	result, err := r.db.Exec(
+	result, err := r.db.ExecContext(ctx,
 		`UPDATE adjunto SET archivo_path = ? WHERE id = ?`,
 		path,
 		id,
@@ -166,9 +167,9 @@ func (r *adjuntoRepository) ActualizarPath(id int, path string) error {
 }
 
 // Actualizar Descripción
-func (r *adjuntoRepository) ActualizarDescripcion(id int, descripcion string) error {
+func (r *adjuntoRepository) ActualizarDescripcion(ctx context.Context, id int, descripcion string) error {
 
-	result, err := r.db.Exec(
+	result, err := r.db.ExecContext(ctx,
 		`UPDATE adjunto SET descripcion = ? WHERE id = ?`,
 		descripcion,
 		id,

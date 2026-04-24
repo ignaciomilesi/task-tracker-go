@@ -1,6 +1,7 @@
 package dbmanager
 
 import (
+	"context"
 	"database/sql"
 	"errors"
 	"fmt"
@@ -21,7 +22,7 @@ func NewDocumentoRepository(db *sql.DB) *documentoRepository {
 }
 
 // Cargar nuevo documento
-func (r *documentoRepository) Cargar(doc *models.Documento) error {
+func (r *documentoRepository) Cargar(ctx context.Context, doc *models.Documento) error {
 
 	if doc == nil {
 		return appErrors.ParametroDeCargaVacio
@@ -31,7 +32,7 @@ func (r *documentoRepository) Cargar(doc *models.Documento) error {
 		return appErrors.CodigoDocumentoVacio
 	}
 
-	_, err := r.db.Exec(
+	_, err := r.db.ExecContext(ctx,
 		`INSERT INTO documento (codigo, emision, titulo, tipo, ubicacion_path, backup_path)
 		 VALUES (?, ?, ?, ?, ?, ?)`,
 		doc.Codigo,
@@ -56,7 +57,7 @@ func (r *documentoRepository) Cargar(doc *models.Documento) error {
 }
 
 // Obtener detalle por código
-func (r *documentoRepository) ObtenerDetalle(codigo string) (*models.Documento, error) {
+func (r *documentoRepository) ObtenerDetalle(ctx context.Context, codigo string) (*models.Documento, error) {
 
 	if strings.TrimSpace(codigo) == "" {
 		return nil, appErrors.ParametroDeBusquedaVacio
@@ -64,7 +65,7 @@ func (r *documentoRepository) ObtenerDetalle(codigo string) (*models.Documento, 
 
 	var d models.Documento
 
-	err := r.db.QueryRow(
+	err := r.db.QueryRowContext(ctx,
 		`SELECT codigo, emision, titulo, tipo, ubicacion_path, backup_path
 		 FROM documento
 		 WHERE codigo = ?`,
@@ -89,13 +90,13 @@ func (r *documentoRepository) ObtenerDetalle(codigo string) (*models.Documento, 
 }
 
 // Filtrar por tipo
-func (r *documentoRepository) FiltrarPorTipo(tipo string) ([]models.Documento, error) {
+func (r *documentoRepository) FiltrarPorTipo(ctx context.Context, tipo string) ([]models.Documento, error) {
 
 	if strings.TrimSpace(tipo) == "" {
 		return nil, appErrors.ParametroDeBusquedaVacio
 	}
 
-	rows, err := r.db.Query(
+	rows, err := r.db.QueryContext(ctx,
 		`SELECT codigo, emision, titulo, tipo, ubicacion_path, backup_path
 		 FROM documento
 		 WHERE tipo = ?`,
@@ -134,13 +135,13 @@ func (r *documentoRepository) FiltrarPorTipo(tipo string) ([]models.Documento, e
 }
 
 // Filtrar por título (LIKE)
-func (r *documentoRepository) FiltrarPorTitulo(titulo string) ([]models.Documento, error) {
+func (r *documentoRepository) FiltrarPorTitulo(ctx context.Context, titulo string) ([]models.Documento, error) {
 
 	if strings.TrimSpace(titulo) == "" {
 		return nil, appErrors.ParametroDeBusquedaVacio
 	}
 
-	rows, err := r.db.Query(
+	rows, err := r.db.QueryContext(ctx,
 		`SELECT codigo, emision, titulo, tipo, ubicacion_path, backup_path
 		 FROM documento
 		 WHERE titulo LIKE ?`,
@@ -179,7 +180,7 @@ func (r *documentoRepository) FiltrarPorTitulo(titulo string) ([]models.Document
 }
 
 // Actualizar path
-func (r *documentoRepository) ActualizarPath(codigo string, nuevoPath string) error {
+func (r *documentoRepository) ActualizarPath(ctx context.Context, codigo string, nuevoPath string) error {
 
 	if strings.TrimSpace(codigo) == "" {
 		return appErrors.ParametroDeBusquedaVacio
@@ -188,7 +189,7 @@ func (r *documentoRepository) ActualizarPath(codigo string, nuevoPath string) er
 		return appErrors.ParametroDeCargaVacio
 	}
 
-	result, err := r.db.Exec(
+	result, err := r.db.ExecContext(ctx,
 		`UPDATE documento
 		 SET ubicacion_path = ?
 		 WHERE codigo = ?`,
@@ -212,7 +213,7 @@ func (r *documentoRepository) ActualizarPath(codigo string, nuevoPath string) er
 }
 
 // Actualizar backup path
-func (r *documentoRepository) ActualizarBackupPath(codigo string, nuevoPath string) error {
+func (r *documentoRepository) ActualizarBackupPath(ctx context.Context, codigo string, nuevoPath string) error {
 
 	if strings.TrimSpace(codigo) == "" {
 		return appErrors.ParametroDeBusquedaVacio
@@ -221,7 +222,7 @@ func (r *documentoRepository) ActualizarBackupPath(codigo string, nuevoPath stri
 		return appErrors.ParametroDeCargaVacio
 	}
 
-	result, err := r.db.Exec(
+	result, err := r.db.ExecContext(ctx,
 		`UPDATE documento
 		 SET backup_path = ?
 		 WHERE codigo = ?`,
