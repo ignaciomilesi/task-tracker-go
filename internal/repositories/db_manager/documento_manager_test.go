@@ -1,6 +1,7 @@
 package dbmanager
 
 import (
+	"context"
 	"errors"
 	"task-tracker-go/internal/appErrors"
 	"task-tracker-go/internal/models"
@@ -12,7 +13,7 @@ func TestDocumentoCargar(t *testing.T) {
 	tests := []struct {
 		name          string
 		input         *models.Documento
-		funcionCarga  func(*documentoRepository, *models.Documento)
+		funcionCarga  func(context.Context, *documentoRepository, *models.Documento)
 		errorEsperado error
 	}{
 		{
@@ -31,13 +32,14 @@ func TestDocumentoCargar(t *testing.T) {
 				Titulo: "Doc test",
 				Tipo:   "pdf",
 			},
-			funcionCarga: func(r *documentoRepository, d *models.Documento) {
-				r.Cargar(d)
+			funcionCarga: func(ctx context.Context, r *documentoRepository, d *models.Documento) {
+				r.Cargar(ctx, d)
 			},
 			errorEsperado: appErrors.DocumentoDuplicado,
 		},
 	}
 
+	ctx := t.Context()
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
 
@@ -47,10 +49,10 @@ func TestDocumentoCargar(t *testing.T) {
 			repo := NewDocumentoRepository(db)
 
 			if test.funcionCarga != nil {
-				test.funcionCarga(repo, test.input)
+				test.funcionCarga(ctx, repo, test.input)
 			}
 
-			err := repo.Cargar(test.input)
+			err := repo.Cargar(ctx, test.input)
 
 			if !errors.Is(err, test.errorEsperado) {
 				t.Errorf("Error inesperado.\nEsperado: %v\nObtenido: %v",
@@ -65,14 +67,14 @@ func TestDocumentoObtenerDetalle(t *testing.T) {
 	tests := []struct {
 		name          string
 		codigo        string
-		funcionCarga  func(*documentoRepository, string)
+		funcionCarga  func(context.Context, *documentoRepository, string)
 		errorEsperado error
 	}{
 		{
 			name:   "Todo OK",
 			codigo: randomString(6),
-			funcionCarga: func(r *documentoRepository, codigo string) {
-				r.Cargar(&models.Documento{
+			funcionCarga: func(ctx context.Context, r *documentoRepository, codigo string) {
+				r.Cargar(ctx, &models.Documento{
 					Codigo: codigo,
 					Titulo: "Doc",
 					Tipo:   "pdf",
@@ -92,6 +94,7 @@ func TestDocumentoObtenerDetalle(t *testing.T) {
 		},
 	}
 
+	ctx := t.Context()
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
 
@@ -101,10 +104,10 @@ func TestDocumentoObtenerDetalle(t *testing.T) {
 			repo := NewDocumentoRepository(db)
 
 			if test.funcionCarga != nil {
-				test.funcionCarga(repo, test.codigo)
+				test.funcionCarga(ctx, repo, test.codigo)
 			}
 
-			result, err := repo.ObtenerDetalle(test.codigo)
+			result, err := repo.ObtenerDetalle(ctx, test.codigo)
 
 			if !errors.Is(err, test.errorEsperado) {
 				t.Errorf("Error inesperado.\nEsperado: %v\nObtenido: %v",
@@ -123,7 +126,7 @@ func TestDocumentoFiltrarPorTipo(t *testing.T) {
 	tests := []struct {
 		name          string
 		tipo          string
-		funcionCarga  func(*documentoRepository)
+		funcionCarga  func(context.Context, *documentoRepository)
 		largoEsperado int
 		errorEsperado error
 	}{
@@ -136,13 +139,13 @@ func TestDocumentoFiltrarPorTipo(t *testing.T) {
 		{
 			name: "Con resultados",
 			tipo: "pdf",
-			funcionCarga: func(r *documentoRepository) {
-				r.Cargar(&models.Documento{
+			funcionCarga: func(ctx context.Context, r *documentoRepository) {
+				r.Cargar(ctx, &models.Documento{
 					Codigo: randomString(6),
 					Titulo: "Doc1",
 					Tipo:   "pdf",
 				})
-				r.Cargar(&models.Documento{
+				r.Cargar(ctx, &models.Documento{
 					Codigo: randomString(6),
 					Titulo: "Doc2",
 					Tipo:   "pdf",
@@ -158,6 +161,7 @@ func TestDocumentoFiltrarPorTipo(t *testing.T) {
 		},
 	}
 
+	ctx := t.Context()
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
 
@@ -167,10 +171,10 @@ func TestDocumentoFiltrarPorTipo(t *testing.T) {
 			repo := NewDocumentoRepository(db)
 
 			if test.funcionCarga != nil {
-				test.funcionCarga(repo)
+				test.funcionCarga(ctx, repo)
 			}
 
-			lista, err := repo.FiltrarPorTipo(test.tipo)
+			lista, err := repo.FiltrarPorTipo(ctx, test.tipo)
 
 			if !errors.Is(err, test.errorEsperado) {
 				t.Errorf("Error inesperado.\nEsperado: %v\nObtenido: %v",
@@ -190,7 +194,7 @@ func TestDocumentoFiltrarPorTitulo(t *testing.T) {
 	tests := []struct {
 		name          string
 		titulo        string
-		funcionCarga  func(*documentoRepository)
+		funcionCarga  func(context.Context, *documentoRepository)
 		largoEsperado int
 		errorEsperado error
 	}{
@@ -203,12 +207,12 @@ func TestDocumentoFiltrarPorTitulo(t *testing.T) {
 		{
 			name:   "Con resultados",
 			titulo: "Doc",
-			funcionCarga: func(r *documentoRepository) {
-				r.Cargar(&models.Documento{
+			funcionCarga: func(ctx context.Context, r *documentoRepository) {
+				r.Cargar(ctx, &models.Documento{
 					Codigo: randomString(6),
 					Titulo: "Documento 1",
 				})
-				r.Cargar(&models.Documento{
+				r.Cargar(ctx, &models.Documento{
 					Codigo: randomString(6),
 					Titulo: "Documento 2",
 				})
@@ -223,6 +227,7 @@ func TestDocumentoFiltrarPorTitulo(t *testing.T) {
 		},
 	}
 
+	ctx := t.Context()
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
 
@@ -232,10 +237,10 @@ func TestDocumentoFiltrarPorTitulo(t *testing.T) {
 			repo := NewDocumentoRepository(db)
 
 			if test.funcionCarga != nil {
-				test.funcionCarga(repo)
+				test.funcionCarga(ctx, repo)
 			}
 
-			lista, err := repo.FiltrarPorTitulo(test.titulo)
+			lista, err := repo.FiltrarPorTitulo(ctx, test.titulo)
 
 			if !errors.Is(err, test.errorEsperado) {
 				t.Errorf("Error inesperado.\nEsperado: %v\nObtenido: %v",
@@ -255,14 +260,14 @@ func TestDocumentoActualizarPath(t *testing.T) {
 	tests := []struct {
 		name          string
 		codigo        string
-		funcionCarga  func(*documentoRepository, string)
+		funcionCarga  func(context.Context, *documentoRepository, string)
 		errorEsperado error
 	}{
 		{
 			name:   "Todo OK",
 			codigo: randomString(6),
-			funcionCarga: func(r *documentoRepository, codigo string) {
-				r.Cargar(&models.Documento{
+			funcionCarga: func(ctx context.Context, r *documentoRepository, codigo string) {
+				r.Cargar(ctx, &models.Documento{
 					Codigo: codigo,
 				})
 			},
@@ -280,6 +285,7 @@ func TestDocumentoActualizarPath(t *testing.T) {
 		},
 	}
 
+	ctx := t.Context()
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
 
@@ -289,10 +295,10 @@ func TestDocumentoActualizarPath(t *testing.T) {
 			repo := NewDocumentoRepository(db)
 
 			if test.funcionCarga != nil {
-				test.funcionCarga(repo, test.codigo)
+				test.funcionCarga(ctx, repo, test.codigo)
 			}
 
-			err := repo.ActualizarPath(test.codigo, "/nuevo/path.pdf")
+			err := repo.ActualizarPath(ctx, test.codigo, "/nuevo/path.pdf")
 
 			if !errors.Is(err, test.errorEsperado) {
 				t.Errorf("Error inesperado.\nEsperado: %v\nObtenido: %v",

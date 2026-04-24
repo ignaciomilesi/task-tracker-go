@@ -1,6 +1,7 @@
 package dbmanager
 
 import (
+	"context"
 	"database/sql"
 	"errors"
 	"task-tracker-go/internal/appErrors"
@@ -53,7 +54,7 @@ func TestAvanceCargar(t *testing.T) {
 			errorEsperado: appErrors.PendienteNoEncontrado,
 		},
 	}
-
+	ctx := t.Context()
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
 
@@ -66,7 +67,7 @@ func TestAvanceCargar(t *testing.T) {
 
 			repo := NewAvanceRepository(db)
 
-			_, err := repo.Cargar(test.input)
+			_, err := repo.Cargar(ctx, test.input)
 
 			if !errors.Is(err, test.errorEsperado) {
 				t.Errorf("Error inesperado.\nEsperado: %v\nObtenido: %v",
@@ -81,13 +82,13 @@ func TestAvanceObtenerDetalle(t *testing.T) {
 	tests := []struct {
 		name          string
 		id            int
-		setup         func(*avanceRepository) int
+		setup         func(context.Context, *avanceRepository) int
 		errorEsperado error
 	}{
 		{
 			name: "Todo OK",
-			setup: func(r *avanceRepository) int {
-				id, err := r.Cargar(&models.Avance{
+			setup: func(ctx context.Context, r *avanceRepository) int {
+				id, err := r.Cargar(ctx, &models.Avance{
 					PendienteID: 1,
 					Descripcion: "detalle",
 					Fecha:       time.Now(),
@@ -105,7 +106,7 @@ func TestAvanceObtenerDetalle(t *testing.T) {
 			errorEsperado: appErrors.AvanceNoEncontrado,
 		},
 	}
-
+	ctx := t.Context()
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
 
@@ -119,10 +120,10 @@ func TestAvanceObtenerDetalle(t *testing.T) {
 			repo := NewAvanceRepository(db)
 
 			if test.setup != nil {
-				test.id = test.setup(repo)
+				test.id = test.setup(ctx, repo)
 			}
 
-			result, err := repo.ObtenerDetalle(test.id)
+			result, err := repo.ObtenerDetalle(ctx, test.id)
 
 			if !errors.Is(err, test.errorEsperado) {
 				t.Errorf("Error inesperado.\nEsperado: %v\nObtenido: %v",
@@ -140,13 +141,13 @@ func TestAvanceEliminar(t *testing.T) {
 
 	tests := []struct {
 		name          string
-		funcionCarga  func(*avanceRepository) int
+		funcionCarga  func(context.Context, *avanceRepository) int
 		errorEsperado error
 	}{
 		{
 			name: "Todo OK",
-			funcionCarga: func(r *avanceRepository) int {
-				id, err := r.Cargar(&models.Avance{
+			funcionCarga: func(ctx context.Context, r *avanceRepository) int {
+				id, err := r.Cargar(ctx, &models.Avance{
 					PendienteID: 1,
 					Descripcion: "para borrar",
 					Fecha:       time.Now(),
@@ -164,7 +165,7 @@ func TestAvanceEliminar(t *testing.T) {
 			errorEsperado: appErrors.AvanceNoEncontrado,
 		},
 	}
-
+	ctx := t.Context()
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
 
@@ -180,10 +181,10 @@ func TestAvanceEliminar(t *testing.T) {
 
 			id := 9999
 			if test.funcionCarga != nil {
-				id = test.funcionCarga(repo)
+				id = test.funcionCarga(ctx, repo)
 			}
 
-			err := repo.Eliminar(id)
+			err := repo.Eliminar(ctx, id)
 
 			if !errors.Is(err, test.errorEsperado) {
 				t.Errorf("Error inesperado.\nEsperado: %v\nObtenido: %v",
@@ -198,7 +199,7 @@ func TestAvanceFiltrarPorPendiente(t *testing.T) {
 	tests := []struct {
 		name          string
 		pendienteID   int
-		funcionCarga  func(*avanceRepository)
+		funcionCarga  func(context.Context, *avanceRepository)
 		largoEsperado int
 		errorEsperado error
 	}{
@@ -211,8 +212,8 @@ func TestAvanceFiltrarPorPendiente(t *testing.T) {
 		{
 			name:        "Con resultados",
 			pendienteID: 1,
-			funcionCarga: func(r *avanceRepository) {
-				_, err := r.Cargar(&models.Avance{
+			funcionCarga: func(ctx context.Context, r *avanceRepository) {
+				_, err := r.Cargar(ctx, &models.Avance{
 					PendienteID: 1,
 					Descripcion: "a1",
 					Fecha:       time.Now(),
@@ -220,7 +221,7 @@ func TestAvanceFiltrarPorPendiente(t *testing.T) {
 				if err != nil {
 					t.Errorf("Error al crear el avance. Detalle:\n%v", err)
 				}
-				_, err = r.Cargar(&models.Avance{
+				_, err = r.Cargar(ctx, &models.Avance{
 					PendienteID: 1,
 					Descripcion: "a2",
 					Fecha:       time.Now(),
@@ -233,7 +234,7 @@ func TestAvanceFiltrarPorPendiente(t *testing.T) {
 			errorEsperado: nil,
 		},
 	}
-
+	ctx := t.Context()
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
 
@@ -248,10 +249,10 @@ func TestAvanceFiltrarPorPendiente(t *testing.T) {
 			repo := NewAvanceRepository(db)
 
 			if test.funcionCarga != nil {
-				test.funcionCarga(repo)
+				test.funcionCarga(ctx, repo)
 			}
 
-			lista, err := repo.FiltrarPorPendiente(test.pendienteID)
+			lista, err := repo.FiltrarPorPendiente(ctx, test.pendienteID)
 
 			if !errors.Is(err, test.errorEsperado) {
 				t.Errorf("Error inesperado.\nEsperado: %v\nObtenido: %v",

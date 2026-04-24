@@ -1,6 +1,7 @@
 package dbmanager
 
 import (
+	"context"
 	"database/sql"
 	"errors"
 	"fmt"
@@ -21,13 +22,14 @@ func NewsolicitanteRepository(db *sql.DB) *solicitanteRepository {
 }
 
 // Crear nuevo solicitante, devuelve el id creado
-func (r *solicitanteRepository) Crear(nuevoSolicitante *models.Solicitante) (int, error) {
+func (r *solicitanteRepository) Crear(ctx context.Context, nuevoSolicitante *models.Solicitante) (int, error) {
 
 	if nuevoSolicitante == nil {
 		return 0, appErrors.ParametroDeCargaVacio
 	}
 
-	res, err := r.db.Exec(
+	res, err := r.db.ExecContext(
+		ctx,
 		"INSERT INTO solicitante (nombre) VALUES (?)",
 		nuevoSolicitante.Nombre,
 	)
@@ -49,10 +51,11 @@ func (r *solicitanteRepository) Crear(nuevoSolicitante *models.Solicitante) (int
 	return int(id), nil
 }
 
-func (r *solicitanteRepository) ObtenerIDPorNombre(nombre string) (int, error) {
+func (r *solicitanteRepository) ObtenerIDPorNombre(ctx context.Context, nombre string) (int, error) {
 	var id int
 
-	err := r.db.QueryRow( // toma solo el primer resultado
+	err := r.db.QueryRowContext( // toma solo el primer resultado
+		ctx,
 		"SELECT id FROM solicitante WHERE nombre = ?",
 		nombre,
 	).Scan(&id)
@@ -68,12 +71,12 @@ func (r *solicitanteRepository) ObtenerIDPorNombre(nombre string) (int, error) {
 }
 
 // Busca en la lista. El parámetro no puede estar vacío
-func (r *solicitanteRepository) Buscar(parametro string) ([]models.Solicitante, error) {
+func (r *solicitanteRepository) Buscar(ctx context.Context, parametro string) ([]models.Solicitante, error) {
 
 	if parametro == "" {
 		return nil, appErrors.ParametroDeBusquedaVacio
 	}
-	rows, err := r.db.Query("SELECT id, nombre FROM solicitante WHERE nombre LIKE ?", "%"+parametro+"%")
+	rows, err := r.db.QueryContext(ctx, "SELECT id, nombre FROM solicitante WHERE nombre LIKE ?", "%"+parametro+"%")
 	if err != nil {
 		return nil, fmt.Errorf("Error inesperado, detalle: %v", err)
 	}
@@ -99,9 +102,9 @@ func (r *solicitanteRepository) Buscar(parametro string) ([]models.Solicitante, 
 	return lista, nil
 }
 
-func (r *solicitanteRepository) Listar(limit, offset int) ([]models.Solicitante, error) {
-	rows, err := r.db.Query(`SELECT id, nombre FROM solicitante
-        ORDER BY id LIMIT ? OFFSET ?`, limit, offset)
+func (r *solicitanteRepository) Listar(ctx context.Context, limit, offset int) ([]models.Solicitante, error) {
+	rows, err := r.db.QueryContext(ctx, `SELECT id, nombre FROM solicitante
+		ORDER BY id LIMIT ? OFFSET ?`, limit, offset)
 	if err != nil {
 		return nil, fmt.Errorf("Error inesperado, detalle: %v", err)
 	}

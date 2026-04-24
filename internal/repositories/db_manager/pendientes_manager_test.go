@@ -1,6 +1,7 @@
 package dbmanager
 
 import (
+	"context"
 	"database/sql"
 	"errors"
 	"task-tracker-go/internal/appErrors"
@@ -14,7 +15,7 @@ func TestPendientesCrear(t *testing.T) {
 	tests := []struct {
 		name                        string
 		input                       *models.Pendientes
-		funcionGeneradorSolicitante func(*sql.DB, *models.Pendientes)
+		funcionGeneradorSolicitante func(context.Context, *sql.DB, *models.Pendientes)
 		errorEsperado               error
 	}{
 		{
@@ -25,10 +26,10 @@ func TestPendientesCrear(t *testing.T) {
 				SolicitanteID: 1,
 				FechaPedido:   time.Now(),
 			},
-			funcionGeneradorSolicitante: func(d *sql.DB, p *models.Pendientes) {
+			funcionGeneradorSolicitante: func(ctx context.Context, d *sql.DB, p *models.Pendientes) {
 				cleanDB(d, "solicitante")
 				repo := NewsolicitanteRepository(d)
-				id, err := repo.Crear(&models.Solicitante{
+				id, err := repo.Crear(ctx, &models.Solicitante{
 					Nombre: randomString(4),
 				})
 				if err != nil {
@@ -50,6 +51,7 @@ func TestPendientesCrear(t *testing.T) {
 		},
 	}
 
+	ctx := t.Context()
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
 
@@ -59,10 +61,10 @@ func TestPendientesCrear(t *testing.T) {
 			repo := NewPendientesRepository(db)
 
 			if test.funcionGeneradorSolicitante != nil {
-				test.funcionGeneradorSolicitante(db, test.input)
+				test.funcionGeneradorSolicitante(ctx, db, test.input)
 			}
 
-			_, err := repo.Crear(test.input)
+			_, err := repo.Crear(ctx, test.input)
 
 			if !errors.Is(err, test.errorEsperado) {
 				t.Errorf("Error inesperado.\nEsperado: %v\nObtenido: %v",
@@ -77,17 +79,17 @@ func TestPendientesAsignar(t *testing.T) {
 	tests := []struct {
 		name          string
 		asignadoID    int
-		setup         func(*sql.DB, *int) int
+		setup         func(context.Context, *sql.DB, *int) int
 		errorEsperado error
 	}{
 		{
 			name: "Todo OK",
-			setup: func(d *sql.DB, c *int) int {
+			setup: func(ctx context.Context, d *sql.DB, c *int) int {
 
 				// generamos el colaborador
 				cleanDB(d, "colaborador")
 				repoCol := NewColaboradorRepository(d)
-				id, err := repoCol.Crear(&models.Colaborador{
+				id, err := repoCol.Crear(ctx, &models.Colaborador{
 					Nombre: randomString(4),
 				})
 				if err != nil {
@@ -99,7 +101,7 @@ func TestPendientesAsignar(t *testing.T) {
 				// generamos el solicitante
 				cleanDB(d, "solicitante")
 				repoSol := NewsolicitanteRepository(d)
-				id, err = repoSol.Crear(&models.Solicitante{
+				id, err = repoSol.Crear(ctx, &models.Solicitante{
 					Nombre: randomString(4),
 				})
 				if err != nil {
@@ -108,7 +110,7 @@ func TestPendientesAsignar(t *testing.T) {
 
 				// generamos un pendiente
 				repoPend := NewPendientesRepository(d)
-				id, err = repoPend.Crear(&models.Pendientes{
+				id, err = repoPend.Crear(ctx, &models.Pendientes{
 					Titulo:        "titulo de prueba",
 					Descripcion:   "decripcion de prueba",
 					SolicitanteID: id,
@@ -128,14 +130,14 @@ func TestPendientesAsignar(t *testing.T) {
 		{
 			name:       "Colaborador inexistente",
 			asignadoID: 9999,
-			setup: func(d *sql.DB, c *int) int {
+			setup: func(ctx context.Context, d *sql.DB, c *int) int {
 
 				// No generamos el colaborador
 
 				// generamos el solicitante
 				cleanDB(d, "solicitante")
 				repoSol := NewsolicitanteRepository(d)
-				id, err := repoSol.Crear(&models.Solicitante{
+				id, err := repoSol.Crear(ctx, &models.Solicitante{
 					Nombre: randomString(4),
 				})
 				if err != nil {
@@ -144,7 +146,7 @@ func TestPendientesAsignar(t *testing.T) {
 
 				// generamos un pendiente
 				repoPend := NewPendientesRepository(d)
-				id, err = repoPend.Crear(&models.Pendientes{
+				id, err = repoPend.Crear(ctx, &models.Pendientes{
 					Titulo:        "titulo de prueba",
 					Descripcion:   "decripcion de prueba",
 					SolicitanteID: id,
@@ -159,6 +161,7 @@ func TestPendientesAsignar(t *testing.T) {
 		},
 	}
 
+	ctx := t.Context()
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
 
@@ -169,9 +172,9 @@ func TestPendientesAsignar(t *testing.T) {
 
 			id := 999
 			if test.setup != nil {
-				id = test.setup(db, &test.asignadoID)
+				id = test.setup(ctx, db, &test.asignadoID)
 			}
-			err := repo.Asignar(id, test.asignadoID, time.Now())
+			err := repo.Asignar(ctx, id, test.asignadoID, time.Now())
 
 			if !errors.Is(err, test.errorEsperado) {
 				t.Errorf("Error inesperado.\nEsperado: %v\nObtenido: %v",
@@ -185,13 +188,13 @@ func TestPendientesTerminar(t *testing.T) {
 
 	tests := []struct {
 		name          string
-		setup         func(*pendientesRepository) int
+		setup         func(context.Context, *pendientesRepository) int
 		errorEsperado error
 	}{
 		{
 			name: "Todo OK",
-			setup: func(d *pendientesRepository) int {
-				id, err := d.Crear(&models.Pendientes{
+			setup: func(ctx context.Context, d *pendientesRepository) int {
+				id, err := d.Crear(ctx, &models.Pendientes{
 					Titulo:        "titulo de prueba",
 					Descripcion:   "decripcion de prueba",
 					SolicitanteID: 1,
@@ -206,13 +209,14 @@ func TestPendientesTerminar(t *testing.T) {
 		},
 		{
 			name: "No existe",
-			setup: func(r *pendientesRepository) int {
+			setup: func(ctx context.Context, r *pendientesRepository) int {
 				return 9999
 			},
 			errorEsperado: appErrors.PendienteNoEncontrado,
 		},
 	}
 
+	ctx := t.Context()
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
 
@@ -226,9 +230,9 @@ func TestPendientesTerminar(t *testing.T) {
 
 			repo := NewPendientesRepository(db)
 
-			id := test.setup(repo)
+			id := test.setup(ctx, repo)
 
-			err := repo.Terminar(id, nil, time.Now())
+			err := repo.Terminar(ctx, id, nil, time.Now())
 
 			if !errors.Is(err, test.errorEsperado) {
 				t.Errorf("Error inesperado.\nEsperado: %v\nObtenido: %v",
@@ -242,13 +246,13 @@ func TestPendientesModificarDescripcion(t *testing.T) {
 
 	tests := []struct {
 		name          string
-		setup         func(*pendientesRepository) int
+		setup         func(context.Context, *pendientesRepository) int
 		errorEsperado error
 	}{
 		{
 			name: "Todo OK",
-			setup: func(d *pendientesRepository) int {
-				id, err := d.Crear(&models.Pendientes{
+			setup: func(ctx context.Context, d *pendientesRepository) int {
+				id, err := d.Crear(ctx, &models.Pendientes{
 					Titulo:        "titulo de prueba",
 					Descripcion:   "decripcion de prueba",
 					SolicitanteID: 1,
@@ -263,13 +267,14 @@ func TestPendientesModificarDescripcion(t *testing.T) {
 		},
 		{
 			name: "No existe",
-			setup: func(r *pendientesRepository) int {
+			setup: func(ctx context.Context, r *pendientesRepository) int {
 				return 9999
 			},
 			errorEsperado: appErrors.PendienteNoEncontrado,
 		},
 	}
 
+	ctx := t.Context()
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
 
@@ -283,9 +288,9 @@ func TestPendientesModificarDescripcion(t *testing.T) {
 
 			repo := NewPendientesRepository(db)
 
-			id := test.setup(repo)
+			id := test.setup(ctx, repo)
 
-			err := repo.ModificarDescripcion(id, "nueva descripcion")
+			err := repo.ModificarDescripcion(ctx, id, "nueva descripcion")
 			if !errors.Is(err, test.errorEsperado) {
 				t.Errorf("Error inesperado.\nEsperado: %v\nObtenido: %v",
 					test.errorEsperado, err)
@@ -299,20 +304,20 @@ func TestPendientesBuscarPorTituloDescripcion(t *testing.T) {
 	tests := []struct {
 		name          string
 		texto         string
-		setup         func(*pendientesRepository)
+		setup         func(context.Context, *pendientesRepository)
 		errorEsperado error
 	}{
 		{
 			name:          "Texto vacío",
 			texto:         " ",
-			setup:         func(r *pendientesRepository) {},
+			setup:         func(ctx context.Context, r *pendientesRepository) {},
 			errorEsperado: appErrors.ParametroDeBusquedaVacio,
 		},
 		{
 			name:  "Con resultados (titulo)",
 			texto: "abc",
-			setup: func(d *pendientesRepository) {
-				_, err := d.Crear(&models.Pendientes{
+			setup: func(ctx context.Context, d *pendientesRepository) {
+				_, err := d.Crear(ctx, &models.Pendientes{
 					Titulo:        "titulo de prueba abc",
 					Descripcion:   "decripción de prueba",
 					SolicitanteID: 1,
@@ -328,8 +333,8 @@ func TestPendientesBuscarPorTituloDescripcion(t *testing.T) {
 		{
 			name:  "Con resultados (descripción)",
 			texto: "abc",
-			setup: func(d *pendientesRepository) {
-				_, err := d.Crear(&models.Pendientes{
+			setup: func(ctx context.Context, d *pendientesRepository) {
+				_, err := d.Crear(ctx, &models.Pendientes{
 					Titulo:        "titulo de prueba",
 					Descripcion:   "decripción de prueba abc",
 					SolicitanteID: 1,
@@ -344,6 +349,7 @@ func TestPendientesBuscarPorTituloDescripcion(t *testing.T) {
 		},
 	}
 
+	ctx := t.Context()
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
 
@@ -357,9 +363,9 @@ func TestPendientesBuscarPorTituloDescripcion(t *testing.T) {
 
 			repo := NewPendientesRepository(db)
 
-			test.setup(repo)
+			test.setup(ctx, repo)
 
-			lista, err := repo.BuscarPorTituloDescripcion(test.texto, false)
+			lista, err := repo.BuscarPorTituloDescripcion(ctx, test.texto, false)
 
 			if !errors.Is(err, test.errorEsperado) {
 				t.Errorf("Error inesperado.\nEsperado: %v\nObtenido: %v",
@@ -378,21 +384,21 @@ func TestPendientesListar(t *testing.T) {
 	tests := []struct {
 		name              string
 		incluirFinalizado bool
-		setup             func(*pendientesRepository)
+		setup             func(context.Context, *pendientesRepository)
 		largoEsperado     int
 		errorEsperado     error
 	}{
 		{
 			name:          "Lista vacía",
-			setup:         func(r *pendientesRepository) {},
+			setup:         func(ctx context.Context, r *pendientesRepository) {},
 			largoEsperado: 0,
 			errorEsperado: nil,
 		},
 		{
 			name:              "Lista Con resultados (Finalizado = false)",
 			incluirFinalizado: false,
-			setup: func(d *pendientesRepository) {
-				_, err := d.Crear(&models.Pendientes{
+			setup: func(ctx context.Context, d *pendientesRepository) {
+				_, err := d.Crear(ctx, &models.Pendientes{
 					Titulo:        "titulo de prueba abc",
 					Descripcion:   "decripción de prueba",
 					SolicitanteID: 1,
@@ -409,8 +415,8 @@ func TestPendientesListar(t *testing.T) {
 		{
 			name:              "Lista Con resultados (Finalizado = true)",
 			incluirFinalizado: true,
-			setup: func(d *pendientesRepository) {
-				id, err := d.Crear(&models.Pendientes{
+			setup: func(ctx context.Context, d *pendientesRepository) {
+				id, err := d.Crear(ctx, &models.Pendientes{
 					Titulo:        "titulo de prueba abc",
 					Descripcion:   "decripción de prueba",
 					SolicitanteID: 1,
@@ -419,7 +425,7 @@ func TestPendientesListar(t *testing.T) {
 				if err != nil {
 					t.Errorf("Error al crear el pendiente. Detalle:\n%v", err)
 				}
-				err = d.Terminar(id, nil, time.Now())
+				err = d.Terminar(ctx, id, nil, time.Now())
 
 			},
 			largoEsperado: 1,
@@ -427,6 +433,7 @@ func TestPendientesListar(t *testing.T) {
 		},
 	}
 
+	ctx := t.Context()
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
 
@@ -440,9 +447,9 @@ func TestPendientesListar(t *testing.T) {
 
 			repo := NewPendientesRepository(db)
 
-			test.setup(repo)
+			test.setup(ctx, repo)
 
-			lista, err := repo.Listar(test.incluirFinalizado, 10, 0)
+			lista, err := repo.Listar(ctx, test.incluirFinalizado, 10, 0)
 
 			if !errors.Is(err, test.errorEsperado) {
 				t.Errorf("Error inesperado.\nEsperado: %v\nObtenido: %v",
@@ -460,13 +467,13 @@ func TestPendientesModificarIdentificacionTablaPendiente(t *testing.T) {
 
 	tests := []struct {
 		name          string
-		setup         func(*pendientesRepository) int
+		setup         func(context.Context, *pendientesRepository) int
 		errorEsperado error
 	}{
 		{
 			name: "Todo OK",
-			setup: func(d *pendientesRepository) int {
-				id, err := d.Crear(&models.Pendientes{
+			setup: func(ctx context.Context, d *pendientesRepository) int {
+				id, err := d.Crear(ctx, &models.Pendientes{
 					Titulo:        "titulo de prueba",
 					Descripcion:   "decripcion de prueba",
 					SolicitanteID: 1,
@@ -481,13 +488,14 @@ func TestPendientesModificarIdentificacionTablaPendiente(t *testing.T) {
 		},
 		{
 			name: "No existe",
-			setup: func(r *pendientesRepository) int {
+			setup: func(ctx context.Context, r *pendientesRepository) int {
 				return 9999
 			},
 			errorEsperado: appErrors.PendienteNoEncontrado,
 		},
 	}
 
+	ctx := t.Context()
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
 
@@ -501,9 +509,9 @@ func TestPendientesModificarIdentificacionTablaPendiente(t *testing.T) {
 
 			repo := NewPendientesRepository(db)
 
-			id := test.setup(repo)
+			id := test.setup(ctx, repo)
 
-			err := repo.ModificarIdentificacionTablaPendiente(id, "nueva descripcion")
+			err := repo.ModificarIdentificacionTablaPendiente(ctx, id, "nueva descripcion")
 			if !errors.Is(err, test.errorEsperado) {
 				t.Errorf("Error inesperado.\nEsperado: %v\nObtenido: %v",
 					test.errorEsperado, err)
@@ -518,7 +526,7 @@ func TestPendientesListarPorAsignado(t *testing.T) {
 		name          string
 		asignadoID    int
 		finalizado    bool
-		setup         func(*pendientesRepository)
+		setup         func(context.Context, *pendientesRepository)
 		largoEsperado int
 		errorEsperado error
 	}{
@@ -533,9 +541,9 @@ func TestPendientesListarPorAsignado(t *testing.T) {
 			name:       "Con resultados",
 			asignadoID: 2,
 			finalizado: false,
-			setup: func(r *pendientesRepository) {
+			setup: func(ctx context.Context, r *pendientesRepository) {
 
-				id, err := r.Crear(&models.Pendientes{
+				id, err := r.Crear(ctx, &models.Pendientes{
 					Titulo:        "titulo de prueba",
 					Descripcion:   "decripcion de prueba",
 					SolicitanteID: 1,
@@ -544,11 +552,11 @@ func TestPendientesListarPorAsignado(t *testing.T) {
 				if err != nil {
 					t.Errorf("Error al crear el pendiente. Detalle:\n%v", err)
 				}
-				err = r.Asignar(id, 2, time.Now())
+				err = r.Asignar(ctx, id, 2, time.Now())
 				if err != nil {
 					t.Errorf("Error al asignar el pendiente. Detalle:\n%v", err)
 				}
-				id2, err := r.Crear(&models.Pendientes{
+				id2, err := r.Crear(ctx, &models.Pendientes{
 					Titulo:        "titulo de prueba",
 					Descripcion:   "decripcion de prueba",
 					SolicitanteID: 1,
@@ -557,7 +565,7 @@ func TestPendientesListarPorAsignado(t *testing.T) {
 				if err != nil {
 					t.Errorf("Error al crear el pendiente. Detalle:\n%v", err)
 				}
-				err = r.Asignar(id2, 2, time.Now())
+				err = r.Asignar(ctx, id2, 2, time.Now())
 				if err != nil {
 					t.Errorf("Error al asignar el pendiente. Detalle:\n%v", err)
 				}
@@ -569,9 +577,9 @@ func TestPendientesListarPorAsignado(t *testing.T) {
 			name:       "Filtra por finalizado",
 			asignadoID: 3,
 			finalizado: true,
-			setup: func(r *pendientesRepository) {
+			setup: func(ctx context.Context, r *pendientesRepository) {
 
-				id, err := r.Crear(&models.Pendientes{
+				id, err := r.Crear(ctx, &models.Pendientes{
 					Titulo:        "titulo de prueba",
 					Descripcion:   "decripcion de prueba",
 					SolicitanteID: 1,
@@ -580,11 +588,11 @@ func TestPendientesListarPorAsignado(t *testing.T) {
 				if err != nil {
 					t.Errorf("Error al crear el pendiente. Detalle:\n%v", err)
 				}
-				err = r.Asignar(id, 3, time.Now())
+				err = r.Asignar(ctx, id, 3, time.Now())
 				if err != nil {
 					t.Errorf("Error al asignar el pendiente. Detalle:\n%v", err)
 				}
-				err = r.Terminar(id, nil, time.Now())
+				err = r.Terminar(ctx, id, nil, time.Now())
 				if err != nil {
 					t.Errorf("Error al terminar el pendiente. Detalle:\n%v", err)
 				}
@@ -594,6 +602,7 @@ func TestPendientesListarPorAsignado(t *testing.T) {
 		},
 	}
 
+	ctx := t.Context()
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
 
@@ -608,10 +617,10 @@ func TestPendientesListarPorAsignado(t *testing.T) {
 			repo := NewPendientesRepository(db)
 
 			if test.setup != nil {
-				test.setup(repo)
+				test.setup(ctx, repo)
 			}
 
-			lista, err := repo.ListarPorAsignado(test.asignadoID, test.finalizado)
+			lista, err := repo.ListarPorAsignado(ctx, test.asignadoID, test.finalizado)
 
 			if !errors.Is(err, test.errorEsperado) {
 				t.Errorf("Error inesperado.\nEsperado: %v\nObtenido: %v",

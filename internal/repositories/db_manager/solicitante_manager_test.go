@@ -1,6 +1,7 @@
 package dbmanager
 
 import (
+	"context"
 	"errors"
 	"task-tracker-go/internal/appErrors"
 	"task-tracker-go/internal/models"
@@ -13,7 +14,7 @@ func TestCrear(t *testing.T) {
 	tests := []struct {
 		name          string
 		solicitante   *models.Solicitante
-		funcionCarga  func(*solicitanteRepository, *models.Solicitante)
+		funcionCarga  func(context.Context, *solicitanteRepository, *models.Solicitante)
 		errorEsperado error
 	}{
 		{
@@ -28,13 +29,14 @@ func TestCrear(t *testing.T) {
 			solicitante: &models.Solicitante{
 				Nombre: randomString(6),
 			},
-			funcionCarga: func(sr *solicitanteRepository, solicitante *models.Solicitante) {
-				sr.Crear(solicitante)
+			funcionCarga: func(ctx context.Context, sr *solicitanteRepository, solicitante *models.Solicitante) {
+				sr.Crear(ctx, solicitante)
 			},
 			errorEsperado: appErrors.SolicitanteDuplicado,
 		},
 	}
 
+	ctx := t.Context()
 	for _, test := range tests {
 
 		t.Run(test.name, func(t *testing.T) {
@@ -45,9 +47,9 @@ func TestCrear(t *testing.T) {
 			solicitanteManager := NewsolicitanteRepository(db)
 
 			if test.funcionCarga != nil {
-				test.funcionCarga(solicitanteManager, test.solicitante)
+				test.funcionCarga(ctx, solicitanteManager, test.solicitante)
 			}
-			_, err := solicitanteManager.Crear(test.solicitante)
+			_, err := solicitanteManager.Crear(ctx, test.solicitante)
 
 			if !errors.Is(err, test.errorEsperado) {
 
@@ -63,14 +65,14 @@ func TestObtenerIDPorNombre(t *testing.T) {
 	tests := []struct {
 		name          string
 		Usuario       string
-		funcionCarga  func(*solicitanteRepository, *models.Solicitante)
+		funcionCarga  func(context.Context, *solicitanteRepository, *models.Solicitante)
 		errorEsperado error
 	}{
 		{
 			name:    "Todo Ok",
 			Usuario: randomString(8),
-			funcionCarga: func(sr *solicitanteRepository, s *models.Solicitante) {
-				sr.Crear(s)
+			funcionCarga: func(ctx context.Context, sr *solicitanteRepository, s *models.Solicitante) {
+				sr.Crear(ctx, s)
 			},
 			errorEsperado: nil,
 		},
@@ -81,6 +83,7 @@ func TestObtenerIDPorNombre(t *testing.T) {
 		},
 	}
 
+	ctx := t.Context()
 	for _, test := range tests {
 
 		t.Run(test.name, func(t *testing.T) {
@@ -91,12 +94,12 @@ func TestObtenerIDPorNombre(t *testing.T) {
 			solicitanteManager := NewsolicitanteRepository(db)
 
 			if test.funcionCarga != nil {
-				test.funcionCarga(solicitanteManager, &models.Solicitante{
+				test.funcionCarga(ctx, solicitanteManager, &models.Solicitante{
 					Nombre: test.Usuario,
 				})
 			}
 
-			_, err := solicitanteManager.ObtenerIDPorNombre(test.Usuario)
+			_, err := solicitanteManager.ObtenerIDPorNombre(ctx, test.Usuario)
 
 			if !errors.Is(err, test.errorEsperado) {
 
@@ -113,7 +116,7 @@ func TestBuscar(t *testing.T) {
 	tests := []struct {
 		name          string
 		filtro        string
-		funcionCarga  func(*solicitanteRepository)
+		funcionCarga  func(context.Context, *solicitanteRepository)
 		largoEsperado int
 		errorEsperado error
 	}{
@@ -126,14 +129,14 @@ func TestBuscar(t *testing.T) {
 		{
 			name:   "Con resultados",
 			filtro: "filtro",
-			funcionCarga: func(r *solicitanteRepository) {
-				if _, err := r.Crear(
+			funcionCarga: func(ctx context.Context, r *solicitanteRepository) {
+				if _, err := r.Crear(ctx,
 					&models.Solicitante{
 						Nombre: "SolicitanteFiltro1",
 					}); err != nil {
 					t.Errorf("Error al crear solicitante. Detalle: %v", err)
 				}
-				if _, err := r.Crear(
+				if _, err := r.Crear(ctx,
 					&models.Solicitante{
 						Nombre: "SolicitanteFiltro2",
 					}); err != nil {
@@ -145,6 +148,7 @@ func TestBuscar(t *testing.T) {
 		},
 	}
 
+	ctx := t.Context()
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
 
@@ -154,10 +158,10 @@ func TestBuscar(t *testing.T) {
 			repo := NewsolicitanteRepository(db)
 
 			if test.funcionCarga != nil {
-				test.funcionCarga(repo)
+				test.funcionCarga(ctx, repo)
 			}
 
-			lista, err := repo.Buscar(test.filtro)
+			lista, err := repo.Buscar(ctx, test.filtro)
 
 			if !errors.Is(err, test.errorEsperado) {
 				t.Errorf("Error inesperado.\nEsperado: %v\nObtenido: %v",
@@ -179,7 +183,7 @@ func TestListar(t *testing.T) {
 		name          string
 		limit         int
 		offset        int
-		funcionCarga  func(*solicitanteRepository)
+		funcionCarga  func(context.Context, *solicitanteRepository)
 		largoEsperado int
 		errorEsperado error
 	}{
@@ -187,9 +191,9 @@ func TestListar(t *testing.T) {
 			name:   "Lista con datos",
 			limit:  10,
 			offset: 0,
-			funcionCarga: func(sr *solicitanteRepository) {
-				sr.Crear(&models.Solicitante{Nombre: randomString(6)})
-				sr.Crear(&models.Solicitante{Nombre: randomString(6)})
+			funcionCarga: func(ctx context.Context, sr *solicitanteRepository) {
+				sr.Crear(ctx, &models.Solicitante{Nombre: randomString(6)})
+				sr.Crear(ctx, &models.Solicitante{Nombre: randomString(6)})
 			},
 			errorEsperado: nil,
 		},
@@ -197,15 +201,16 @@ func TestListar(t *testing.T) {
 			name:   "Respeta limit",
 			limit:  1,
 			offset: 0,
-			funcionCarga: func(sr *solicitanteRepository) {
-				sr.Crear(&models.Solicitante{Nombre: randomString(6)})
-				sr.Crear(&models.Solicitante{Nombre: randomString(6)})
+			funcionCarga: func(ctx context.Context, sr *solicitanteRepository) {
+				sr.Crear(ctx, &models.Solicitante{Nombre: randomString(6)})
+				sr.Crear(ctx, &models.Solicitante{Nombre: randomString(6)})
 			},
 			largoEsperado: 1,
 			errorEsperado: nil,
 		},
 	}
 
+	ctx := t.Context()
 	for _, test := range tests {
 
 		t.Run(test.name, func(t *testing.T) {
@@ -216,10 +221,10 @@ func TestListar(t *testing.T) {
 			solicitanteManager := NewsolicitanteRepository(db)
 
 			if test.funcionCarga != nil {
-				test.funcionCarga(solicitanteManager)
+				test.funcionCarga(ctx, solicitanteManager)
 			}
 
-			lista, err := solicitanteManager.Listar(test.limit, test.offset)
+			lista, err := solicitanteManager.Listar(ctx, test.limit, test.offset)
 
 			if !errors.Is(err, test.errorEsperado) {
 				t.Errorf("Error no esperado.\nSe esperaba:\n --- %v\nSe obtuvo:\n --- %v",

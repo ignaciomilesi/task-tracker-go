@@ -1,6 +1,7 @@
 package dbmanager
 
 import (
+	"context"
 	"database/sql"
 	"errors"
 	"fmt"
@@ -22,7 +23,7 @@ func NewCodigoSAPRepository(db *sql.DB) *codigoSAPRepository {
 }
 
 // Cargar nuevo código SAP
-func (r *codigoSAPRepository) Cargar(NuevoCodigoSap *models.CodigoSAP) error {
+func (r *codigoSAPRepository) Cargar(ctx context.Context, NuevoCodigoSap *models.CodigoSAP) error {
 
 	if NuevoCodigoSap == nil {
 		return appErrors.ParametroDeCargaVacio
@@ -32,7 +33,7 @@ func (r *codigoSAPRepository) Cargar(NuevoCodigoSap *models.CodigoSAP) error {
 		return appErrors.CodigoSAPVacio
 	}
 
-	_, err := r.db.Exec(
+	_, err := r.db.ExecContext(ctx,
 		"INSERT INTO codigo_SAP (codigo, descripcion) VALUES (?, ?)",
 		NuevoCodigoSap.Codigo,
 		NuevoCodigoSap.Descripcion,
@@ -52,11 +53,11 @@ func (r *codigoSAPRepository) Cargar(NuevoCodigoSap *models.CodigoSAP) error {
 }
 
 // Obtener por código
-func (r *codigoSAPRepository) ObtenerDetalle(codigo string) (*models.CodigoSAP, error) {
+func (r *codigoSAPRepository) ObtenerDetalle(ctx context.Context, codigo string) (*models.CodigoSAP, error) {
 
 	var c models.CodigoSAP
 
-	err := r.db.QueryRow(
+	err := r.db.QueryRowContext(ctx,
 		"SELECT codigo, descripcion FROM codigo_SAP WHERE codigo = ?",
 		codigo,
 	).Scan(&c.Codigo, &c.Descripcion)
@@ -72,12 +73,12 @@ func (r *codigoSAPRepository) ObtenerDetalle(codigo string) (*models.CodigoSAP, 
 }
 
 // Buscar por descripción
-func (r *codigoSAPRepository) BuscarPorDescripcion(parametro string) ([]models.CodigoSAP, error) {
+func (r *codigoSAPRepository) BuscarPorDescripcion(ctx context.Context, parametro string) ([]models.CodigoSAP, error) {
 
 	if parametro == "" {
 		return nil, appErrors.ParametroDeBusquedaVacio
 	}
-	rows, err := r.db.Query(
+	rows, err := r.db.QueryContext(ctx,
 		"SELECT codigo, descripcion FROM codigo_SAP WHERE descripcion LIKE ?",
 		"%"+parametro+"%",
 	)
@@ -107,13 +108,13 @@ func (r *codigoSAPRepository) BuscarPorDescripcion(parametro string) ([]models.C
 }
 
 // Modificar descripción de un código SAP
-func (r *codigoSAPRepository) ModificarDescripcion(codigo string, nuevaDescripcion string) error {
+func (r *codigoSAPRepository) ModificarDescripcion(ctx context.Context, codigo string, nuevaDescripcion string) error {
 
 	if strings.TrimSpace(codigo) == "" {
 		return appErrors.CodigoSAPVacio
 	}
 
-	result, err := r.db.Exec(
+	result, err := r.db.ExecContext(ctx,
 		"UPDATE codigo_SAP SET descripcion = ? WHERE codigo = ?", nuevaDescripcion, codigo)
 	if err != nil {
 		return fmt.Errorf("error inesperado: %v", err)
@@ -131,11 +132,11 @@ func (r *codigoSAPRepository) ModificarDescripcion(codigo string, nuevaDescripci
 	return nil
 }
 
-func (r *codigoSAPRepository) Listar(limit, offset int) ([]models.CodigoSAP, error) {
+func (r *codigoSAPRepository) Listar(ctx context.Context, limit, offset int) ([]models.CodigoSAP, error) {
 
-	rows, err := r.db.Query(
+	rows, err := r.db.QueryContext(ctx,
 		`SELECT codigo, descripcion FROM codigo_SAP ORDER BY codigo
-        LIMIT ? OFFSET ?`, limit, offset)
+		LIMIT ? OFFSET ?`, limit, offset)
 	if err != nil {
 		return nil, fmt.Errorf("Error inesperado, detalle: %v", err)
 	}

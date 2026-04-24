@@ -1,6 +1,7 @@
 package dbmanager
 
 import (
+	"context"
 	"database/sql"
 	"errors"
 	"fmt"
@@ -21,12 +22,12 @@ func NewPendientesRepository(db *sql.DB) *pendientesRepository {
 	return &pendientesRepository{db: db}
 }
 
-func (r *pendientesRepository) Crear(p *models.Pendientes) (int, error) {
+func (r *pendientesRepository) Crear(ctx context.Context, p *models.Pendientes) (int, error) {
 
 	if p == nil {
 		return 0, appErrors.ParametroDeCargaVacio
 	}
-	result, err := r.db.Exec(
+	result, err := r.db.ExecContext(ctx,
 		`INSERT INTO pendientes (
 			titulo, descripcion, solicitante_id, fecha_pedido
 		) VALUES (?, ?, ?, ?)`,
@@ -56,9 +57,9 @@ func (r *pendientesRepository) Crear(p *models.Pendientes) (int, error) {
 	return int(id), nil
 }
 
-func (r *pendientesRepository) Asignar(id int, asignadoID int, fecha time.Time) error {
+func (r *pendientesRepository) Asignar(ctx context.Context, id int, asignadoID int, fecha time.Time) error {
 
-	result, err := r.db.Exec(
+	result, err := r.db.ExecContext(ctx,
 		`UPDATE pendientes
 		 SET asignado_id = ?, fecha_asignado = ?
 		 WHERE id = ?`,
@@ -90,9 +91,9 @@ func (r *pendientesRepository) Asignar(id int, asignadoID int, fecha time.Time) 
 	return nil
 }
 
-func (r *pendientesRepository) Terminar(id int, cierre *string, fecha time.Time) error {
+func (r *pendientesRepository) Terminar(ctx context.Context, id int, cierre *string, fecha time.Time) error {
 
-	result, err := r.db.Exec(
+	result, err := r.db.ExecContext(ctx,
 		`UPDATE pendientes
 		 SET cierre = ?, fecha_cierre = ?, finalizado = 1
 		 WHERE id = ?`,
@@ -115,9 +116,9 @@ func (r *pendientesRepository) Terminar(id int, cierre *string, fecha time.Time)
 	return nil
 }
 
-func (r *pendientesRepository) ModificarDescripcion(id int, descripcion string) error {
+func (r *pendientesRepository) ModificarDescripcion(ctx context.Context, id int, descripcion string) error {
 
-	result, err := r.db.Exec(
+	result, err := r.db.ExecContext(ctx,
 		`UPDATE pendientes
 		 SET descripcion = ?
 		 WHERE id = ?`,
@@ -139,9 +140,9 @@ func (r *pendientesRepository) ModificarDescripcion(id int, descripcion string) 
 	return nil
 }
 
-func (r *pendientesRepository) ModificarIdentificacionTablaPendiente(id int, identificacion string) error {
+func (r *pendientesRepository) ModificarIdentificacionTablaPendiente(ctx context.Context, id int, identificacion string) error {
 
-	result, err := r.db.Exec(
+	result, err := r.db.ExecContext(ctx,
 		`UPDATE pendientes
 		 SET identificacion_tabla_pendiente = ?
 		 WHERE id = ?`,
@@ -163,18 +164,18 @@ func (r *pendientesRepository) ModificarIdentificacionTablaPendiente(id int, ide
 	return nil
 }
 
-func (r *pendientesRepository) BuscarPorTituloDescripcion(texto string, finalizado bool) ([]models.Pendientes, error) {
+func (r *pendientesRepository) BuscarPorTituloDescripcion(ctx context.Context, texto string, finalizado bool) ([]models.Pendientes, error) {
 
 	if strings.TrimSpace(texto) == "" {
 		return nil, appErrors.ParametroDeBusquedaVacio
 	}
 
-	rows, err := r.db.Query(
+	rows, err := r.db.QueryContext(ctx,
 		`SELECT id, titulo, descripcion,
-		        solicitante_id, fecha_pedido,
-		        asignado_id, fecha_asignado,
-		        cierre, fecha_cierre, finalizado,
-		        identificacion_tabla_pendiente
+				solicitante_id, fecha_pedido,
+				asignado_id, fecha_asignado,
+				cierre, fecha_cierre, finalizado,
+				identificacion_tabla_pendiente
 		 FROM pendientes
 		 WHERE (titulo LIKE ? OR descripcion LIKE ?) AND finalizado = ?
 		 ORDER BY fecha_pedido`,
@@ -219,14 +220,14 @@ func (r *pendientesRepository) BuscarPorTituloDescripcion(texto string, finaliza
 	return lista, nil
 }
 
-func (r *pendientesRepository) ListarPorAsignado(asignadoID int, finalizado bool) ([]models.Pendientes, error) {
+func (r *pendientesRepository) ListarPorAsignado(ctx context.Context, asignadoID int, finalizado bool) ([]models.Pendientes, error) {
 
-	rows, err := r.db.Query(
+	rows, err := r.db.QueryContext(ctx,
 		`SELECT id, titulo, descripcion,
-		        solicitante_id, fecha_pedido,
-		        asignado_id, fecha_asignado,
-		        cierre, fecha_cierre, finalizado,
-		        identificacion_tabla_pendiente
+				solicitante_id, fecha_pedido,
+				asignado_id, fecha_asignado,
+				cierre, fecha_cierre, finalizado,
+				identificacion_tabla_pendiente
 		 FROM pendientes
 		 WHERE asignado_id = ? AND finalizado = ?
 		 ORDER BY fecha_pedido`,
@@ -270,14 +271,14 @@ func (r *pendientesRepository) ListarPorAsignado(asignadoID int, finalizado bool
 	return lista, nil
 }
 
-func (r *pendientesRepository) Listar(finalizado bool, limit, offset int) ([]models.Pendientes, error) {
+func (r *pendientesRepository) Listar(ctx context.Context, finalizado bool, limit, offset int) ([]models.Pendientes, error) {
 
-	rows, err := r.db.Query(
+	rows, err := r.db.QueryContext(ctx,
 		`SELECT id, titulo, descripcion,
-		        solicitante_id, fecha_pedido,
-		        asignado_id, fecha_asignado,
-		        cierre, fecha_cierre, finalizado,
-		        identificacion_tabla_pendiente
+				solicitante_id, fecha_pedido,
+				asignado_id, fecha_asignado,
+				cierre, fecha_cierre, finalizado,
+				identificacion_tabla_pendiente
 		 FROM pendientes
 		 WHERE finalizado = ?
 		 ORDER BY fecha_pedido LIMIT ? OFFSET ?`,

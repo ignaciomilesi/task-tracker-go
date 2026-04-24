@@ -1,6 +1,7 @@
 package dbmanager
 
 import (
+	"context"
 	"database/sql"
 	"errors"
 	"fmt"
@@ -21,12 +22,13 @@ func NewColaboradorRepository(db *sql.DB) *colaboradorRepository {
 }
 
 // Crear nuevo colaborador, devuelve el id creado
-func (r *colaboradorRepository) Crear(NuevoColaborador *models.Colaborador) (int, error) {
+func (r *colaboradorRepository) Crear(ctx context.Context, NuevoColaborador *models.Colaborador) (int, error) {
 
 	if NuevoColaborador == nil {
 		return 0, appErrors.ParametroDeCargaVacio
 	}
-	res, err := r.db.Exec(
+	res, err := r.db.ExecContext(
+		ctx,
 		"INSERT INTO colaborador (nombre) VALUES (?)",
 		NuevoColaborador.Nombre,
 	)
@@ -49,10 +51,11 @@ func (r *colaboradorRepository) Crear(NuevoColaborador *models.Colaborador) (int
 	return int(id), nil
 }
 
-func (r *colaboradorRepository) ObtenerIDPorNombre(nombre string) (int, error) {
+func (r *colaboradorRepository) ObtenerIDPorNombre(ctx context.Context, nombre string) (int, error) {
 	var id int
 
-	err := r.db.QueryRow(
+	err := r.db.QueryRowContext(
+		ctx,
 		"SELECT id FROM colaborador WHERE nombre = ?",
 		nombre,
 	).Scan(&id)
@@ -68,11 +71,12 @@ func (r *colaboradorRepository) ObtenerIDPorNombre(nombre string) (int, error) {
 }
 
 // Busca en la lista.
-func (r *colaboradorRepository) Buscar(parametro string) ([]models.Colaborador, error) {
+func (r *colaboradorRepository) Buscar(ctx context.Context, parametro string) ([]models.Colaborador, error) {
 	if parametro == "" {
 		return nil, appErrors.ParametroDeBusquedaVacio
 	}
-	rows, err := r.db.Query(
+	rows, err := r.db.QueryContext(
+		ctx,
 		"SELECT id, nombre FROM colaborador WHERE nombre LIKE ?",
 		"%"+parametro+"%",
 	)
@@ -101,11 +105,12 @@ func (r *colaboradorRepository) Buscar(parametro string) ([]models.Colaborador, 
 	return lista, nil
 }
 
-func (r *colaboradorRepository) Listar(limit, offset int) ([]models.Colaborador, error) {
+func (r *colaboradorRepository) Listar(ctx context.Context, limit, offset int) ([]models.Colaborador, error) {
 
-	rows, err := r.db.Query(
+	rows, err := r.db.QueryContext(
+		ctx,
 		`SELECT id, nombre FROM colaborador ORDER BY id
-        LIMIT ? OFFSET ?`, limit, offset)
+		LIMIT ? OFFSET ?`, limit, offset)
 	if err != nil {
 		return nil, fmt.Errorf("Error inesperado, detalle: %v", err)
 	}

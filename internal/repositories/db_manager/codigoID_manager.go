@@ -1,6 +1,7 @@
 package dbmanager
 
 import (
+	"context"
 	"database/sql"
 	"errors"
 	"fmt"
@@ -23,7 +24,7 @@ func NewCodigoIDRepository(db *sql.DB) *codigoIDRepository {
 }
 
 // Cargar nuevo código ID
-func (r *codigoIDRepository) Cargar(nuevoCodigoID *models.CodigoID) error {
+func (r *codigoIDRepository) Cargar(ctx context.Context, nuevoCodigoID *models.CodigoID) error {
 
 	if nuevoCodigoID == nil {
 		return appErrors.ParametroDeCargaVacio
@@ -33,7 +34,7 @@ func (r *codigoIDRepository) Cargar(nuevoCodigoID *models.CodigoID) error {
 		return appErrors.CodigoIDVacio
 	}
 
-	_, err := r.db.Exec(
+	_, err := r.db.ExecContext(ctx,
 		`INSERT INTO codigo_ID (codigo, descripcion, estado, fecha_pedido, fecha_actualizacion)
 		 VALUES (?, ?, ?, ?, ?)`,
 		nuevoCodigoID.Codigo,
@@ -57,7 +58,7 @@ func (r *codigoIDRepository) Cargar(nuevoCodigoID *models.CodigoID) error {
 }
 
 // Obtener por código
-func (r *codigoIDRepository) ObtenerDetalle(codigo string) (*models.CodigoID, error) {
+func (r *codigoIDRepository) ObtenerDetalle(ctx context.Context, codigo string) (*models.CodigoID, error) {
 
 	if strings.TrimSpace(codigo) == "" {
 		return nil, appErrors.CodigoIDVacio
@@ -65,7 +66,7 @@ func (r *codigoIDRepository) ObtenerDetalle(codigo string) (*models.CodigoID, er
 
 	var c models.CodigoID
 
-	err := r.db.QueryRow(
+	err := r.db.QueryRowContext(ctx,
 		`SELECT codigo, descripcion, estado, fecha_pedido, fecha_actualizacion
 		 FROM codigo_ID
 		 WHERE codigo = ?`,
@@ -89,9 +90,9 @@ func (r *codigoIDRepository) ObtenerDetalle(codigo string) (*models.CodigoID, er
 }
 
 // Filtrar por estado
-func (r *codigoIDRepository) FiltrarPorEstado(estado string) ([]models.CodigoID, error) {
+func (r *codigoIDRepository) FiltrarPorEstado(ctx context.Context, estado string) ([]models.CodigoID, error) {
 
-	rows, err := r.db.Query(
+	rows, err := r.db.QueryContext(ctx,
 		`SELECT codigo, descripcion, estado, fecha_pedido, fecha_actualizacion
 		 FROM codigo_ID
 		 WHERE estado = ?`,
@@ -129,13 +130,13 @@ func (r *codigoIDRepository) FiltrarPorEstado(estado string) ([]models.CodigoID,
 }
 
 // Actualizar estado y fecha de actualización
-func (r *codigoIDRepository) ActualizarEstado(codigo string, nuevoEstado string, fecha time.Time) error {
+func (r *codigoIDRepository) ActualizarEstado(ctx context.Context, codigo string, nuevoEstado string, fecha time.Time) error {
 
 	if strings.TrimSpace(codigo) == "" {
 		return appErrors.CodigoIDVacio
 	}
 
-	result, err := r.db.Exec(
+	result, err := r.db.ExecContext(ctx,
 		`UPDATE codigo_ID
 		 SET estado = ?, fecha_actualizacion = ?
 		 WHERE codigo = ?`,
@@ -159,12 +160,12 @@ func (r *codigoIDRepository) ActualizarEstado(codigo string, nuevoEstado string,
 	return nil
 }
 
-func (r *codigoIDRepository) Listar(limit, offset int) ([]models.CodigoID, error) {
+func (r *codigoIDRepository) Listar(ctx context.Context, limit, offset int) ([]models.CodigoID, error) {
 
-	rows, err := r.db.Query(
+	rows, err := r.db.QueryContext(ctx,
 		`SELECT codigo, descripcion, estado, fecha_pedido, fecha_actualizacion
 		 FROM codigo_ID
-        LIMIT ? OFFSET ?`, limit, offset)
+		LIMIT ? OFFSET ?`, limit, offset)
 	if err != nil {
 		return nil, fmt.Errorf("Error inesperado, detalle: %v", err)
 	}
