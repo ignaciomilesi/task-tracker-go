@@ -36,4 +36,5 @@ var (
 
 	// Errores en el service
 	ParametrosDeListaInvalidos = errors.New("Los parámetros de la lista son inválidos")
+	FechaNoValida              = errors.New("La fecha ingresada no es válida")
 )
