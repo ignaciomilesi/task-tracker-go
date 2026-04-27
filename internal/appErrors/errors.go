@@ -6,6 +6,7 @@ var (
 	ParametroDeCargaVacio    = errors.New("El parámetro de carga no puede ser vacío")
 	ParametroDeBusquedaVacio = errors.New("El parámetro de búsqueda no puede ser vacío")
 
+	// errores en el repo
 	SolicitanteNoEncontrado = errors.New("El Solicitante no fue encontrado")
 	SolicitanteDuplicado    = errors.New("El Solicitante ya existe en la base de datos")
 
@@ -32,4 +33,8 @@ var (
 
 	FkNoEncontrado    = errors.New("Uno de los IDs no existe (foreign key)")
 	RelacionDuplicada = errors.New("La relación entre ID ya existe en la base de datos")
+
+	// Errores en el service
+	ParametrosDeListaInvalidos = errors.New("Los parámetros de la lista son inválidos")
+	FechaNoValida              = errors.New("La fecha ingresada no es válida")
 )
